@@ -1,0 +1,71 @@
+swagger: "2.0"
+info:
+  description: This is the swagger file that goes with our server code
+  version: "1.0.0"
+  title: Swagger REST Multiplier
+consumes:
+  - application/json
+produces:
+  - application/json
+
+basePath: /api
+
+# Paths supported by the server application
+paths:
+  /multiplier:
+    get:
+      operationId: multiplier.read_all
+      tags:
+        - multiplier
+      summary: Read the entire list of numbers
+      description: Read the list of numbers
+      parameters:
+        - name: length
+          in: query
+          type: integer
+          description: Number of numbers to get from numbers
+          required: false
+        - name: offset
+          in: query
+          type: integer
+          description: Offset from beginning of list where to start gathering numbers
+          required: false
+      responses:
+        200:
+          description: Successfully read numbers list operation
+          schema:
+            type: array
+            items:
+              properties:
+                first_number:
+                  type: integer
+                second_number:
+                  type: integer
+                sum:
+                  type: integer
+                timestamp:
+                  type: string
+
+    post:
+      operationId: multiplier.multiplication
+      tags:
+        - multiplier
+      summary: The multiplier data structure supported by the server application
+      description: Multiplies two numbers
+      parameters:
+        - name: numbers
+          in: body
+          description: Numbers to multiply
+          required: True
+          schema:
+            type: object
+            properties:
+              first_number:
+                type: integer
+                description: First number of multiplication
+              second_number:
+                type: integer
+                description: Second number of multiplication
+      responses:
+        201:
+          description: Successfully multiplied numbers

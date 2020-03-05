@@ -1,0 +1,13 @@
+apiVersion: apiserver.config.k8s.io/v1
+kind: EncryptionConfiguration
+resources:
+  - resources:
+    - secrets
+    - pods
+    - services
+    providers:
+    - secretbox: # XSalsa20 + Poly1305
+        keys:
+        - name: key1
+          secret: oEYJiFGSM6Rpa20ZPT9TvrUu4bM1mmcyyajMqYToKlk=
+    - identity: {}

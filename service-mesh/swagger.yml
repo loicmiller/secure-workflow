@@ -1,0 +1,71 @@
+swagger: "2.0"
+info:
+  description: This is the swagger file that goes with our server code
+  version: "1.0.0"
+  title: Swagger REST Adder
+consumes:
+  - application/json
+produces:
+  - application/json
+
+basePath: /api
+
+# Paths supported by the server application
+paths:
+  /adder:
+    get:
+      operationId: adder.read_all
+      tags:
+        - adder
+      summary: Read the entire list of numbers
+      description: Read the list of numbers
+      parameters:
+        - name: length
+          in: query
+          type: integer
+          description: Number of numbers to get from numbers
+          required: false
+        - name: offset
+          in: query
+          type: integer
+          description: Offset from beginning of list where to start gathering numbers
+          required: false
+      responses:
+        200:
+          description: Successfully read numbers list operation
+          schema:
+            type: array
+            items:
+              properties:
+                first_number:
+                  type: integer
+                second_number:
+                  type: integer
+                sum:
+                  type: integer
+                timestamp:
+                  type: string
+
+    post:
+      operationId: adder.sum
+      tags:
+        - adder
+      summary: The adder data structure supported by the server application
+      description: Sums two numbers
+      parameters:
+        - name: numbers
+          in: body
+          description: Numbers to sum
+          required: True
+          schema:
+            type: object
+            properties:
+              first_number:
+                type: integer
+                description: First number of sum
+              second_number:
+                type: integer
+                description: Second number of sum
+      responses:
+        201:
+          description: Successfully summed numbers

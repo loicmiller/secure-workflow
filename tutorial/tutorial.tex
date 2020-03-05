@@ -1,0 +1,142 @@
+% --------------------------------------------------------------
+% This is all preamble stuff that you don't have to worry about.
+% Head down to where it says "Start here"
+% --------------------------------------------------------------
+ 
+\documentclass[12pt]{article}
+
+% Code snippets
+\usepackage{xcolor}
+\usepackage{listings}
+\lstset{basicstyle=\ttfamily,
+  showstringspaces=false,
+  commentstyle=\color{red},
+  keywordstyle=\color{blue},
+  breaklines=true,
+  postbreak=\mbox{\textcolor{red}{$\hookrightarrow$}\space},
+}
+ 
+\begin{document}
+ 
+% --------------------------------------------------------------
+%                         Start here
+% --------------------------------------------------------------
+ 
+\title{Secure Workflow Demo}
+
+\maketitle
+
+This demo has been realized using Istio-1.2.0, Kubernetes-1.15.0 and minikube-1.2.0.
+The demo has also been tested with Istio-1.3.3, Kubernetes-1.16.0 and minikube-1.2.0.
+
+\section{Creating the services}
+
+The first step is the creation of the workflow services.
+We have created two REST APIs, \textit{workflow-adder} and \textit{workflow-multiplier}, which can perform respectively additions and multiplications on numbers passed with a PUT request.
+The numbers and the result of the operation are then stored in the running service, and can be queried with a GET request.
+See the \textbf{services} folder for more details on the implementation.
+
+\section{Containerizing the services (Docker)}
+
+The second step is to turn those services into their containerized versions.
+The \textit{Dockerfile} and the \textit{requirements.txt} files are added to do this.
+We add an owner service to simulate the owner of the workflow.
+
+
+
+\section{Installing Kubernetes}
+
+Prerequisites: Install KVM or VirtualBox:
+\begin{lstlisting}[language=bash]
+sudo add-apt-repository multiverse && sudo apt update
+sudo apt install virtualbox
+\end{lstlisting}
+
+
+\begin{lstlisting}[language=bash]
+# Make sure vmx or svm is enabled
+egrep --color 'vmx|svm' /proc/cpuinfo
+
+# Install kubectl
+curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
+chmod +x ./kubectl
+sudo mv ./kubectl /usr/local/bin/kubectl
+kubectl version
+
+# Install minikube
+curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 && chmod +x minikube
+sudo install minikube /usr/local/bin
+
+# Start minikube. You might need a restart before
+minikube start --memory=8192 --cpus=4
+\end{lstlisting}
+
+
+
+\section{Installing Istio}
+
+\begin{lstlisting}[language=bash]
+# Install Istio
+curl -L https://git.io/getLatestIstio | ISTIO_VERSION=1.3.2 sh -
+cd istio-1.3.2
+export PATH=$PWD/bin:$PATH
+
+# Install the Istio Custom Resource Definitions (CRDs)
+\begin{lstlisting}[language=bash]
+for i in install/kubernetes/helm/istio-init/files/crd*yaml; do kubectl apply -f $i; done
+
+# Enforce strict mTLS authentication
+kubectl apply -f install/kubernetes/istio-demo-auth.yaml
+
+# Enable automatic injection of the Envoy proxies for services of the workflow
+kubectl label namespace default istio-injection=enabled
+
+# Check the installation
+kubectl get pods --all-namespaces
+kubectl get svc --all-namespaces
+\end{lstlisting}
+
+
+
+\section{Adding Open Policy Agent}
+
+\begin{lstlisting}[language=bash]
+# Install the OPA-Istio CRDs and our custom policy
+kubectl apply -f custom_quick_start.yaml
+
+# Enable automatic injection of the OPA sidecars for services of the workflow
+kubectl label namespace default opa-istio-injection="enabled"
+\end{lstlisting}
+
+
+
+\section{Deploying the workflow}
+
+\begin{lstlisting}[language=bash]
+# Use the same \textbf{Docker} host as the minikube VM
+eval $(minikube docker-env)
+
+# This command can be used later to undo this:
+eval $(minikube docker-env -u)
+
+# Build the service images
+docker build -t my_docker_adder:latest .
+docker build -t my_docker_multiplier:latest .
+docker build -t my_docker_owner:latest .
+
+# Check if the images are in minikube's Docker registry
+minikube ssh docker images
+
+# Deploy the workflow services
+kubectl apply -f workflow-deployment.yaml
+
+# Check if the services were deployed:
+kubectl get deployments
+\end{lstlisting}
+
+
+% --------------------------------------------------------------
+%     You don't have to mess with anything below this line.
+% --------------------------------------------------------------
+ 
+\end{document}

@@ -1,0 +1,163 @@
+##################################################################################################
+# Owner service
+##################################################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: owner
+  labels:
+    app: owner
+    service: owner
+spec:
+  ports:
+  - port: 5002
+    name: http
+  selector:
+    app: owner
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: workflow-owner
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: owner-v1
+  labels:
+    app: owner
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: owner
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: owner
+        version: v1
+    spec:
+      serviceAccountName: workflow-owner
+      containers:
+      - name: workflow-owner
+        image: my_docker_owner:latest
+        imagePullPolicy: IfNotPresent
+        command: [ "/bin/bash", "-ce", "tail -f /dev/null" ]
+        ports:
+        - containerPort: 5002
+      - name: tcpdump
+        image: corfr/tcpdump
+        command:
+          - /bin/sleep
+          - infinity
+---
+##################################################################################################
+# Adder service
+##################################################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: adder
+  labels:
+    app: adder
+    service: adder
+spec:
+  ports:
+  - port: 5000
+    name: http
+  selector:
+    app: adder
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: workflow-adder
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: adder-v1
+  labels:
+    app: adder
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: adder
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: adder
+        version: v1
+    spec:
+      serviceAccountName: workflow-adder
+      containers:
+      - name: workflow-adder
+        image: my_docker_adder:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5000
+      - name: tcpdump
+        image: corfr/tcpdump
+        command:
+          - /bin/sleep
+          - infinity
+---
+##################################################################################################
+# Multiplier service
+##################################################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: multiplier
+  labels:
+    app: multiplier
+    service: multiplier
+spec:
+  ports:
+  - port: 5001
+    name: http
+  selector:
+    app: multiplier
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: workflow-multiplier
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: multiplier-v1
+  labels:
+    app: multiplier
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: multiplier
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: multiplier
+        version: v1
+    spec:
+      serviceAccountName: workflow-multiplier
+      containers:
+      - name: workflow-multiplier
+        image: my_docker_multiplier:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5001
+      - name: tcpdump
+        image: corfr/tcpdump
+        command:
+          - /bin/sleep
+          - infinity
+---

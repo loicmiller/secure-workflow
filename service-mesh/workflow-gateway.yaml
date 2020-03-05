@@ -1,0 +1,41 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: workflow-gateway
+spec:
+  selector:
+    istio: ingressgateway # use istio default controller
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "*"
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: workflow
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - workflow-gateway
+  http:
+  - match:
+    - uri:
+        exact: /api/adder
+    route:
+    - destination:
+        host: adder
+        port:
+          number: 5000
+  - match:
+    - uri:
+        exact: /api/multiplier
+    route:
+    - destination:
+        host: multiplier
+        port:
+          number: 5001
