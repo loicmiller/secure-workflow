@@ -122,7 +122,7 @@ minikube ssh docker images
 4. Deploy the workflow
 
 ```sh
-kubectl apply -f service-mesh/workflow-deployment.yaml
+kubectl apply -f service-mesh/enc-at-rest.yaml service-mesh/pv.yaml service-mesh/workflow-deployment.yaml
 ```
 
 
