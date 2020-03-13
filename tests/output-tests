@@ -1,0 +1,341 @@
+Namespace(capture_dir='packet_captures/', kill=False, no_capture=True, override_pods='', policy_file='../service-mesh/custom_quick_start.yaml', quiet=False, start=False, verbose=0)
+Pod(owner, owner-v1-b86764f-j5xgq, 172.17.0.14, 10.109.242.243, 5002)
+Pod(adder, adder-v1-7b556b65d4-rd52h, 172.17.0.12, 10.108.84.33, 5000)
+Pod(multiplier, multiplier-v1-8547897f4b-n8422, 172.17.0.13, 10.97.67.85, 5001)
+{Pod(owner, owner-v1-b86764f-j5xgq, 172.17.0.14, 10.109.242.243, 5002): {Pod(multiplier, multiplier-v1-8547897f4b-n8422, 172.17.0.13, 10.97.67.85, 5001): {'GET': 'allow',
+                                                                                                                                                           'POST': 'deny'},
+                                                                         Pod(adder, adder-v1-7b556b65d4-rd52h, 172.17.0.12, 10.108.84.33, 5000): {'GET': 'allow',
+                                                                                                                                                  'POST': 'allow'}},
+ Pod(multiplier, multiplier-v1-8547897f4b-n8422, 172.17.0.13, 10.97.67.85, 5001): {Pod(owner, owner-v1-b86764f-j5xgq, 172.17.0.14, 10.109.242.243, 5002): {'GET': 'deny',
+                                                                                                                                                           'POST': 'deny'},
+                                                                                   Pod(adder, adder-v1-7b556b65d4-rd52h, 172.17.0.12, 10.108.84.33, 5000): {'GET': 'deny',
+                                                                                                                                                            'POST': 'deny'}},
+ Pod(adder, adder-v1-7b556b65d4-rd52h, 172.17.0.12, 10.108.84.33, 5000): {Pod(owner, owner-v1-b86764f-j5xgq, 172.17.0.14, 10.109.242.243, 5002): {'GET': 'deny',
+                                                                                                                                                  'POST': 'deny'},
+                                                                          Pod(multiplier, multiplier-v1-8547897f4b-n8422, 172.17.0.13, 10.97.67.85, 5001): {'GET': 'deny',
+                                                                                                                                                            'POST': 'allow'}}}
+SOURCE      DESTINATION  TYPE  CAPTURE         POLICY  CHECK
+owner       adder        GET   DST_ETH0        allow   OK
+owner       adder        GET   SRC_LO          allow   OK
+owner       adder        GET   SRC_ETH0        allow   OK
+owner       adder        GET   BYSTANDER_ETH0  allow   OK
+owner       adder        GET   DST_LO          allow   OK
+owner       adder        GET   BYSTANDER_LO    allow   OK
+
+
+SOURCE      DESTINATION  TYPE  CAPTURE         POLICY  CHECK
+owner       adder        POST  SRC_LO          allow   OK
+owner       adder        POST  SRC_ETH0        allow   OK
+owner       adder        POST  BYSTANDER_ETH0  allow   OK
+owner       adder        POST  BYSTANDER_LO    allow   OK
+owner       adder        POST  DST_ETH0        allow   OK
+owner       adder        POST  DST_LO          allow   OK
+
+
+SOURCE      DESTINATION  TYPE  CAPTURE         POLICY  CHECK
+owner       multiplier   GET   DST_ETH0        allow   OK
+owner       multiplier   GET   BYSTANDER_ETH0  allow   OK
+owner       multiplier   GET   DST_LO          allow   OK
+owner       multiplier   GET   BYSTANDER_LO    allow   OK
+owner       multiplier   GET   SRC_ETH0        allow   OK
+owner       multiplier   GET   SRC_LO          allow   OK
+
+
+SOURCE      DESTINATION  TYPE  CAPTURE         POLICY  CHECK
+owner       multiplier   POST  BYSTANDER_ETH0  deny    OK
+owner       multiplier   POST  DST_ETH0        deny    OK
+owner       multiplier   POST  SRC_ETH0        deny    OK
+owner       multiplier   POST  DST_LO          deny    OK
+owner       multiplier   POST  SRC_LO          deny    OK
+owner       multiplier   POST  BYSTANDER_LO    deny    OK
+
+
+SOURCE      DESTINATION  TYPE  CAPTURE         POLICY  CHECK
+adder       owner        GET   BYSTANDER_LO    deny    OK
+adder       owner        GET   DST_LO          deny    OK
+adder       owner        GET   BYSTANDER_ETH0  deny    OK
+adder       owner        GET   SRC_LO          deny    OK
+adder       owner        GET   SRC_ETH0        deny    OK
+adder       owner        GET   DST_ETH0        deny    OK
+
+
+SOURCE      DESTINATION  TYPE  CAPTURE         POLICY  CHECK
+adder       owner        POST  DST_LO          deny    OK
+adder       owner        POST  BYSTANDER_LO    deny    OK
+adder       owner        POST  DST_ETH0        deny    OK
+adder       owner        POST  SRC_ETH0        deny    OK
+adder       owner        POST  BYSTANDER_ETH0  deny    OK
+adder       owner        POST  SRC_LO          deny    OK
+
+
+SOURCE      DESTINATION  TYPE  CAPTURE         POLICY  CHECK
+adder       multiplier   GET   DST_LO          deny    OK
+adder       multiplier   GET   BYSTANDER_ETH0  deny    OK
+adder       multiplier   GET   DST_ETH0        deny    OK
+adder       multiplier   GET   SRC_ETH0        deny    OK
+adder       multiplier   GET   BYSTANDER_LO    deny    OK
+adder       multiplier   GET   SRC_LO          deny    OK
+
+
+SOURCE      DESTINATION  TYPE  CAPTURE         POLICY  CHECK
+adder       multiplier   POST  DST_LO          allow   OK
+adder       multiplier   POST  SRC_LO          allow   OK
+adder       multiplier   POST  BYSTANDER_LO    allow   OK
+adder       multiplier   POST  BYSTANDER_ETH0  allow   OK
+adder       multiplier   POST  DST_ETH0        allow   OK
+adder       multiplier   POST  SRC_ETH0        allow   OK
+
+
+SOURCE      DESTINATION  TYPE  CAPTURE         POLICY  CHECK
+multiplier  owner        GET   SRC_LO          deny    OK
+multiplier  owner        GET   BYSTANDER_ETH0  deny    OK
+multiplier  owner        GET   DST_LO          deny    OK
+multiplier  owner        GET   DST_ETH0        deny    OK
+multiplier  owner        GET   SRC_ETH0        deny    OK
+multiplier  owner        GET   BYSTANDER_LO    deny    OK
+
+
+SOURCE      DESTINATION  TYPE  CAPTURE         POLICY  CHECK
+multiplier  owner        POST  SRC_ETH0        deny    OK
+multiplier  owner        POST  SRC_LO          deny    OK
+multiplier  owner        POST  BYSTANDER_LO    deny    OK
+multiplier  owner        POST  DST_ETH0        deny    OK
+multiplier  owner        POST  BYSTANDER_ETH0  deny    OK
+multiplier  owner        POST  DST_LO          deny    OK
+
+
+SOURCE      DESTINATION  TYPE  CAPTURE         POLICY  CHECK
+multiplier  adder        GET   DST_ETH0        deny    OK
+multiplier  adder        GET   DST_LO          deny    OK
+multiplier  adder        GET   SRC_LO          deny    OK
+multiplier  adder        GET   BYSTANDER_ETH0  deny    OK
+multiplier  adder        GET   BYSTANDER_LO    deny    OK
+multiplier  adder        GET   SRC_ETH0        deny    OK
+
+
+SOURCE      DESTINATION  TYPE  CAPTURE         POLICY  CHECK
+multiplier  adder        POST  DST_LO          deny    OK
+multiplier  adder        POST  BYSTANDER_ETH0  deny    OK
+multiplier  adder        POST  SRC_LO          deny    OK
+multiplier  adder        POST  SRC_ETH0        deny    OK
+multiplier  adder        POST  BYSTANDER_LO    deny    OK
+multiplier  adder        POST  DST_ETH0        deny    OK
+
+
+SOURCE      DESTINATION  TYPE  CAPTURE         POLICY  CHECK
+owner       adder        GET   DST_ETH0        allow   OK
+owner       adder        GET   SRC_LO          allow   OK
+owner       adder        GET   SRC_ETH0        allow   OK
+owner       adder        GET   BYSTANDER_ETH0  allow   OK
+owner       adder        GET   DST_LO          allow   OK
+owner       adder        GET   BYSTANDER_LO    allow   OK
+
+
+SOURCE      DESTINATION  TYPE  CAPTURE         POLICY  CHECK
+owner       adder        POST  SRC_LO          allow   OK
+owner       adder        POST  SRC_ETH0        allow   OK
+owner       adder        POST  BYSTANDER_ETH0  allow   OK
+owner       adder        POST  BYSTANDER_LO    allow   OK
+owner       adder        POST  DST_ETH0        allow   OK
+owner       adder        POST  DST_LO          allow   OK
+
+
+SOURCE      DESTINATION  TYPE  CAPTURE         POLICY  CHECK
+owner       multiplier   GET   DST_ETH0        allow   OK
+owner       multiplier   GET   BYSTANDER_ETH0  allow   OK
+owner       multiplier   GET   DST_LO          allow   OK
+owner       multiplier   GET   BYSTANDER_LO    allow   OK
+owner       multiplier   GET   SRC_ETH0        allow   OK
+owner       multiplier   GET   SRC_LO          allow   OK
+
+
+SOURCE      DESTINATION  TYPE  CAPTURE         POLICY  CHECK
+owner       multiplier   POST  BYSTANDER_ETH0  deny    OK
+owner       multiplier   POST  DST_ETH0        deny    OK
+owner       multiplier   POST  SRC_ETH0        deny    OK
+owner       multiplier   POST  DST_LO          deny    OK
+owner       multiplier   POST  SRC_LO          deny    OK
+owner       multiplier   POST  BYSTANDER_LO    deny    OK
+
+
+SOURCE      DESTINATION  TYPE  CAPTURE         POLICY  CHECK
+adder       owner        GET   BYSTANDER_LO    deny    OK
+adder       owner        GET   DST_LO          deny    OK
+adder       owner        GET   BYSTANDER_ETH0  deny    OK
+adder       owner        GET   SRC_LO          deny    OK
+adder       owner        GET   SRC_ETH0        deny    OK
+adder       owner        GET   DST_ETH0        deny    OK
+
+
+SOURCE      DESTINATION  TYPE  CAPTURE         POLICY  CHECK
+adder       owner        POST  DST_LO          deny    OK
+adder       owner        POST  BYSTANDER_LO    deny    OK
+adder       owner        POST  DST_ETH0        deny    OK
+adder       owner        POST  SRC_ETH0        deny    OK
+adder       owner        POST  BYSTANDER_ETH0  deny    OK
+adder       owner        POST  SRC_LO          deny    OK
+
+
+SOURCE      DESTINATION  TYPE  CAPTURE         POLICY  CHECK
+adder       multiplier   GET   DST_LO          deny    OK
+adder       multiplier   GET   BYSTANDER_ETH0  deny    OK
+adder       multiplier   GET   DST_ETH0        deny    OK
+adder       multiplier   GET   SRC_ETH0        deny    OK
+adder       multiplier   GET   BYSTANDER_LO    deny    OK
+adder       multiplier   GET   SRC_LO          deny    OK
+
+
+SOURCE      DESTINATION  TYPE  CAPTURE         POLICY  CHECK
+adder       multiplier   POST  DST_LO          allow   OK
+adder       multiplier   POST  SRC_LO          allow   OK
+adder       multiplier   POST  BYSTANDER_LO    allow   OK
+adder       multiplier   POST  BYSTANDER_ETH0  allow   OK
+adder       multiplier   POST  DST_ETH0        allow   OK
+adder       multiplier   POST  SRC_ETH0        allow   OK
+
+
+SOURCE      DESTINATION  TYPE  CAPTURE         POLICY  CHECK
+multiplier  owner        GET   SRC_LO          deny    OK
+multiplier  owner        GET   BYSTANDER_ETH0  deny    OK
+multiplier  owner        GET   DST_LO          deny    OK
+multiplier  owner        GET   DST_ETH0        deny    OK
+multiplier  owner        GET   SRC_ETH0        deny    OK
+multiplier  owner        GET   BYSTANDER_LO    deny    OK
+
+
+SOURCE      DESTINATION  TYPE  CAPTURE         POLICY  CHECK
+multiplier  owner        POST  SRC_ETH0        deny    OK
+multiplier  owner        POST  SRC_LO          deny    OK
+multiplier  owner        POST  BYSTANDER_LO    deny    OK
+multiplier  owner        POST  DST_ETH0        deny    OK
+multiplier  owner        POST  BYSTANDER_ETH0  deny    OK
+multiplier  owner        POST  DST_LO          deny    OK
+
+
+SOURCE      DESTINATION  TYPE  CAPTURE         POLICY  CHECK
+multiplier  adder        GET   DST_ETH0        deny    OK
+multiplier  adder        GET   DST_LO          deny    OK
+multiplier  adder        GET   SRC_LO          deny    OK
+multiplier  adder        GET   BYSTANDER_ETH0  deny    OK
+multiplier  adder        GET   BYSTANDER_LO    deny    OK
+multiplier  adder        GET   SRC_ETH0        deny    OK
+
+
+SOURCE      DESTINATION  TYPE  CAPTURE         POLICY  CHECK
+multiplier  adder        POST  DST_LO          deny    OK
+multiplier  adder        POST  BYSTANDER_ETH0  deny    OK
+multiplier  adder        POST  SRC_LO          deny    OK
+multiplier  adder        POST  SRC_ETH0        deny    OK
+multiplier  adder        POST  BYSTANDER_LO    deny    OK
+multiplier  adder        POST  DST_ETH0        deny    OK
+
+
+SOURCE      DESTINATION  TYPE  CAPTURE         POLICY  CHECK
+owner       adder        GET   DST_ETH0        allow   OK
+owner       adder        GET   SRC_LO          allow   OK
+owner       adder        GET   SRC_ETH0        allow   OK
+owner       adder        GET   BYSTANDER_ETH0  allow   OK
+owner       adder        GET   DST_LO          allow   OK
+owner       adder        GET   BYSTANDER_LO    allow   OK
+
+
+SOURCE      DESTINATION  TYPE  CAPTURE         POLICY  CHECK
+owner       adder        POST  SRC_LO          allow   OK
+owner       adder        POST  SRC_ETH0        allow   OK
+owner       adder        POST  BYSTANDER_ETH0  allow   OK
+owner       adder        POST  BYSTANDER_LO    allow   OK
+owner       adder        POST  DST_ETH0        allow   OK
+owner       adder        POST  DST_LO          allow   OK
+
+
+SOURCE      DESTINATION  TYPE  CAPTURE         POLICY  CHECK
+owner       multiplier   GET   DST_ETH0        allow   OK
+owner       multiplier   GET   BYSTANDER_ETH0  allow   OK
+owner       multiplier   GET   DST_LO          allow   OK
+owner       multiplier   GET   BYSTANDER_LO    allow   OK
+owner       multiplier   GET   SRC_ETH0        allow   OK
+owner       multiplier   GET   SRC_LO          allow   OK
+
+
+SOURCE      DESTINATION  TYPE  CAPTURE         POLICY  CHECK
+owner       multiplier   POST  BYSTANDER_ETH0  deny    OK
+owner       multiplier   POST  DST_ETH0        deny    OK
+owner       multiplier   POST  SRC_ETH0        deny    OK
+owner       multiplier   POST  DST_LO          deny    OK
+owner       multiplier   POST  SRC_LO          deny    OK
+owner       multiplier   POST  BYSTANDER_LO    deny    OK
+
+
+SOURCE      DESTINATION  TYPE  CAPTURE         POLICY  CHECK
+adder       owner        GET   BYSTANDER_LO    deny    OK
+adder       owner        GET   DST_LO          deny    OK
+adder       owner        GET   BYSTANDER_ETH0  deny    OK
+adder       owner        GET   SRC_LO          deny    OK
+adder       owner        GET   SRC_ETH0        deny    OK
+adder       owner        GET   DST_ETH0        deny    OK
+
+
+SOURCE      DESTINATION  TYPE  CAPTURE         POLICY  CHECK
+adder       owner        POST  DST_LO          deny    OK
+adder       owner        POST  BYSTANDER_LO    deny    OK
+adder       owner        POST  DST_ETH0        deny    OK
+adder       owner        POST  SRC_ETH0        deny    OK
+adder       owner        POST  BYSTANDER_ETH0  deny    OK
+adder       owner        POST  SRC_LO          deny    OK
+
+
+SOURCE      DESTINATION  TYPE  CAPTURE         POLICY  CHECK
+adder       multiplier   GET   DST_LO          deny    OK
+adder       multiplier   GET   BYSTANDER_ETH0  deny    OK
+adder       multiplier   GET   DST_ETH0        deny    OK
+adder       multiplier   GET   SRC_ETH0        deny    OK
+adder       multiplier   GET   BYSTANDER_LO    deny    OK
+adder       multiplier   GET   SRC_LO          deny    OK
+
+
+SOURCE      DESTINATION  TYPE  CAPTURE         POLICY  CHECK
+adder       multiplier   POST  DST_LO          allow   OK
+adder       multiplier   POST  SRC_LO          allow   OK
+adder       multiplier   POST  BYSTANDER_LO    allow   OK
+adder       multiplier   POST  BYSTANDER_ETH0  allow   OK
+adder       multiplier   POST  DST_ETH0        allow   OK
+adder       multiplier   POST  SRC_ETH0        allow   OK
+
+
+SOURCE      DESTINATION  TYPE  CAPTURE         POLICY  CHECK
+multiplier  owner        GET   SRC_LO          deny    OK
+multiplier  owner        GET   BYSTANDER_ETH0  deny    OK
+multiplier  owner        GET   DST_LO          deny    OK
+multiplier  owner        GET   DST_ETH0        deny    OK
+multiplier  owner        GET   SRC_ETH0        deny    OK
+multiplier  owner        GET   BYSTANDER_LO    deny    OK
+
+
+SOURCE      DESTINATION  TYPE  CAPTURE         POLICY  CHECK
+multiplier  owner        POST  SRC_ETH0        deny    OK
+multiplier  owner        POST  SRC_LO          deny    OK
+multiplier  owner        POST  BYSTANDER_LO    deny    OK
+multiplier  owner        POST  DST_ETH0        deny    OK
+multiplier  owner        POST  BYSTANDER_ETH0  deny    OK
+multiplier  owner        POST  DST_LO          deny    OK
+
+
+SOURCE      DESTINATION  TYPE  CAPTURE         POLICY  CHECK
+multiplier  adder        GET   DST_ETH0        deny    OK
+multiplier  adder        GET   DST_LO          deny    OK
+multiplier  adder        GET   SRC_LO          deny    OK
+multiplier  adder        GET   BYSTANDER_ETH0  deny    OK
+multiplier  adder        GET   BYSTANDER_LO    deny    OK
+multiplier  adder        GET   SRC_ETH0        deny    OK
+
+
+SOURCE      DESTINATION  TYPE  CAPTURE         POLICY  CHECK
+multiplier  adder        POST  DST_LO          deny    OK
+multiplier  adder        POST  BYSTANDER_ETH0  deny    OK
+multiplier  adder        POST  SRC_LO          deny    OK
+multiplier  adder        POST  SRC_ETH0        deny    OK
+multiplier  adder        POST  BYSTANDER_LO    deny    OK
+multiplier  adder        POST  DST_ETH0        deny    OK
+
+
+Exiting program...

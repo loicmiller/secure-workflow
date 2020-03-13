@@ -2,7 +2,7 @@ swagger: "2.0"
 info:
   description: This is the swagger file that goes with our server code
   version: "1.0.0"
-  title: Swagger REST Adder
+  title: Swagger REST Owner
 consumes:
   - application/json
 produces:
@@ -12,11 +12,11 @@ basePath: /api
 
 # Paths supported by the server application
 paths:
-  /adder:
+  /owner:
     get:
-      operationId: adder.read_all
+      operationId: owner.read_all
       tags:
-        - adder
+        - owner
       summary: Read the entire list of numbers
       description: Read the list of numbers
       parameters:
@@ -37,35 +37,28 @@ paths:
             type: array
             items:
               properties:
-                first_number:
-                  type: integer
-                second_number:
-                  type: integer
-                sum:
+                result:
                   type: integer
                 timestamp:
                   type: string
 
     post:
-      operationId: adder.sum
+      operationId: owner.store
       tags:
-        - adder
-      summary: The adder data structure supported by the server application
-      description: Sums two numbers
+        - owner
+      summary: The owner data structure supported by the server application
+      description: Result
       parameters:
-        - name: numbers
+        - name: number
           in: body
-          description: Numbers to sum
+          description: Number to store
           required: True
           schema:
             type: object
             properties:
-              first_number:
+              result:
                 type: integer
-                description: First number of sum
-              second_number:
-                type: integer
-                description: Second number of sum
+                description: Number to store
       responses:
         201:
-          description: Successfully summed numbers
+          description: Successfully store number

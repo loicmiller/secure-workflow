@@ -40,13 +40,19 @@ spec:
         version: v1
     spec:
       serviceAccountName: workflow-owner
+      volumes:
+      - name: pv-owner
+        persistentVolumeClaim:
+          claimName: pv-claim-owner
       containers:
       - name: workflow-owner
-        image: my_docker_owner:latest
+        image: owner:latest
         imagePullPolicy: IfNotPresent
-        command: [ "/bin/bash", "-ce", "tail -f /dev/null" ]
         ports:
         - containerPort: 5002
+        volumeMounts:
+        - mountPath: "/usr/share"
+          name: pv-owner
       - name: tcpdump
         image: corfr/tcpdump
         command:
@@ -95,12 +101,19 @@ spec:
         version: v1
     spec:
       serviceAccountName: workflow-adder
+      volumes:
+      - name: pv-adder
+        persistentVolumeClaim:
+          claimName: pv-claim-adder
       containers:
       - name: workflow-adder
-        image: my_docker_adder:latest
+        image: adder:latest
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 5000
+        volumeMounts:
+        - mountPath: "/usr/share"
+          name: pv-adder
       - name: tcpdump
         image: corfr/tcpdump
         command:
@@ -149,12 +162,19 @@ spec:
         version: v1
     spec:
       serviceAccountName: workflow-multiplier
+      volumes:
+      - name: pv-multiplier
+        persistentVolumeClaim:
+          claimName: pv-claim-multiplier
       containers:
       - name: workflow-multiplier
-        image: my_docker_multiplier:latest
+        image: multiplier:latest
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 5001
+        volumeMounts:
+        - mountPath: "/usr/share"
+          name: pv-multiplier
       - name: tcpdump
         image: corfr/tcpdump
         command:

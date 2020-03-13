@@ -324,11 +324,13 @@ def subprocess_call(inp, lock=None):
         if lock is not None:
             lock.acquire()
             try:
-                print(output)
+                if args.verbose >= 2:
+                    print(output)
             finally:
                 lock.release()
         else:
-            print(output)
+            if args.verbose >= 2:
+                print(output)
     return output
 
 
@@ -353,11 +355,13 @@ def subprocess_shell_call(inp, lock=None):
         if lock is not None:
             lock.acquire()
             try:
-                print(output)
+                if args.verbose >= 2:
+                    print(output)
             finally:
                 lock.release()
         else:
-            print(output)
+            if args.verbose >= 2:
+                print(output)
     return output
 
 
@@ -378,11 +382,13 @@ def sleep_call(inp, lock=None):
         if lock is not None:
             lock.acquire()
             try:
-                print("Sleeping for " + command[-1] + " seconds...")
+                if args.verbose >= 2:
+                    print("Sleeping for " + command[-1] + " seconds...")
             finally:
                 lock.release()
         else:
-            print("Sleeping for " + command[-1] + " seconds...")
+            if args.verbose >= 2:
+                print("Sleeping for " + command[-1] + " seconds...")
     process = subprocess.run(command,
                          stdout=subprocess.PIPE,
                          stderr=subprocess.STDOUT,
@@ -394,16 +400,16 @@ def sleep_call(inp, lock=None):
 # Sends request from src to dst with the specified request_type
 def request(src, dst, request_type, lock):
     # Sleeping for 3 seconds before POST
-    sleep_call("sleep 3", lock)
+    sleep_call("sleep 2", lock)
 
     # While capture is running, POST request from owner to adder
     if request_type == "GET":
         subprocess_shell_call("kubectl exec -it " + src.pod_id + " -c workflow-" + src.name + " -- curl --user " + src.name + ":password --header 'Accept: application/json' 'http://" + dst.name + ":" + dst.service_port + "/api/" + dst.name + "' -v", lock)
     else: # POST request
-        subprocess_shell_call("kubectl exec -it " + src.pod_id + " -c workflow-" + src.name + " -- curl --user " + src.name + ":password --header 'Content-Type: application/json' --header 'Accept: text/html' -d '{ \"first_number\": 4, \"second_number\": 2 }' 'http://" + dst.name + ":" + dst.service_port + "/api/" + dst.name + "' -v", lock)
-
-    # Sleeping for 15 seconds before POST
-    sleep_call("sleep 15", lock)
+        if dst.name == "owner":
+            subprocess_shell_call("kubectl exec -it " + src.pod_id + " -c workflow-" + src.name + " -- curl --user " + src.name + ":password --header 'Content-Type: application/json' --header 'Accept: text/html' -d '{ \"result\": 4 }' 'http://" + dst.name + ":" + dst.service_port + "/api/" + dst.name + "' -v", lock)
+        else: # adder or multiplier
+            subprocess_shell_call("kubectl exec -it " + src.pod_id + " -c workflow-" + src.name + " -- curl --user " + src.name + ":password --header 'Content-Type: application/json' --header 'Accept: text/html' -d '{ \"first_number\": 4, \"second_number\": 2 }' 'http://" + dst.name + ":" + dst.service_port + "/api/" + dst.name + "' -v", lock)
 
 
 # Launches a packet capture, a request and fetches the capture file
@@ -419,7 +425,7 @@ def request_capture(src, dst, request_type, capture_pod, interface): #TODO Fix p
     # -G SECONDS -W 1 : Run for SECONDS seconds
     # -w FILE : specify the dump file
     # -i INTERFACE : specify the interface
-    capture_p = Process(target=subprocess_shell_call, args=("kubectl exec -it " + capture_pod.pod_id + " -c tcpdump -- tcpdump -G 10 -W 1 -w /tmp/capture.pcap -i " + interface, lock))
+    capture_p = Process(target=subprocess_shell_call, args=("kubectl exec -it " + capture_pod.pod_id + " -c tcpdump -- tcpdump -G 5 -W 1 -w /tmp/capture.pcap -i " + interface, lock))
 
     # Sends request
     request_p = Process(target=request, args=(src, dst, request_type, lock))
@@ -584,7 +590,7 @@ def check_capture(capture, capture_id, authorization, pods):
                         # The request was a POST
                         elif capture_request_type == "POST":
                             # Request was authorized
-                            if response_type ==  "HTTP/1.1 201 Created":
+                            if response_type == "HTTP/1.1 201 Created":
                                 if args.verbose >= 2:
                                     print("Request was allowed.")
                                 if authorization == "allow":
@@ -733,6 +739,7 @@ def check_capture(capture, capture_id, authorization, pods):
         # Flags for finding relevant sessions
         found_src_dst_flow = False
         found_dst_src_flow = False
+        found_cleartext = False
 
         # Return value
         return_check = ""
@@ -754,8 +761,19 @@ def check_capture(capture, capture_id, authorization, pods):
                 if args.verbose >= 2:
                     print("Found SRC -> DST")
 
-                # TODO: Check TLS / Traffic not in cleartext
-                return_check = "OK"
+                for packet in sessions[session]:
+                    if Raw in packet:
+                        try:
+                            payload = packet[Raw].load.decode()
+                            found_cleartext = True
+                        except:
+                            if args.verbose >= 2:
+                                print("No cleartext here...")
+
+                if found_cleartext:
+                    return_check = "KO"
+                else:
+                    return_check = "OK"
 
             # Relevant session: Destination -> Source
             elif session_src == capture_dst_pod.pod_ip + ':' + capture_dst_pod.service_port and session_dst.split(':')[0] == capture_src_pod.pod_ip:
@@ -764,8 +782,19 @@ def check_capture(capture, capture_id, authorization, pods):
                 if args.verbose >= 2:
                     print("Found DST -> SRC")
 
-                # TODO: Check TLS / Traffic not in cleartext
-                return_check = "OK"
+                for packet in sessions[session]:
+                    if Raw in packet:
+                        try:
+                            payload = packet[Raw].load.decode()
+                            found_cleartext = True
+                        except:
+                            if args.verbose >= 2:
+                                print("No cleartext here...")
+
+                if found_cleartext:
+                    return_check = "KO"
+                else:
+                    return_check = "OK"
 
         # No relevant session found
         if not found_src_dst_flow or not found_dst_src_flow:
@@ -861,13 +890,28 @@ if __name__ == "__main__":
             for pod in pods:
                 if pod.name == override_pod:
                     pod.pod_ip = override_ip
+    if args.no_capture:
+        with open("capture-metadata.dat") as capture_metadata:
+            for line in capture_metadata:
+                pod_chunks = line.split(')')[0].split('(')[-1].split(", ")
+                for pod in pods:
+                    if pod.name == pod_chunks[0]:
+                        pod.pod_ip = pod_chunks[2]
     if not args.quiet:
         for pod in pods:
             print(pod)
 
 
-    # For each possible communication, capture on each possible interface
+    # Packet capture
     if not args.no_capture:
+        # Capture metadata file
+        with open("capture-metadata.dat", "w+") as capture_metadata:
+            for pod in pods:
+                capture_metadata.write(repr(pod))
+                capture_metadata.write("\n")
+
+        # For each possible communication, capture on each possible interface
+        print("Capturing packets...")
         for src in pods:
             for dst in pods:
                 if src != dst:
@@ -877,7 +921,7 @@ if __name__ == "__main__":
                                 request_capture(src, dst, request_type, capture_pod, interface)
 
 
-    # Fetch policy from YAML configuration file and store it in policy_data
+    # Fetch policy from YAML configuration file and store it in policy
     with open(args.policy_file) as policy_file:
         # Isolate the opa-policy section
         policy = policy_file.read().split("name: opa-policy")[-1]

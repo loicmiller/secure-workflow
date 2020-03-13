@@ -1,4 +1,12 @@
 
-FROM ubuntu
+FROM python:3.6
 
-RUN apt-get update && apt-get install -y curl
+COPY . /app
+
+WORKDIR app
+
+RUN pip install -r requirements.txt
+
+ENTRYPOINT ["python"]
+
+CMD ["server.py"]

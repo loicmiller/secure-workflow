@@ -1,0 +1,92 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-owner
+  labels:
+    type: local
+    name: pv-owner
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/data-owner"
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-adder
+  labels:
+    type: local
+    name: pv-adder
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/data-adder"
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-multiplier
+  labels:
+    type: local
+    name: pv-multiplier
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/data-multiplier"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pv-claim-owner
+spec:
+  storageClassName: manual
+  selector:
+    matchLabels:
+      name: pv-owner
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pv-claim-adder
+spec:
+  storageClassName: manual
+  selector:
+    matchLabels:
+      name: pv-adder
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pv-claim-multiplier
+spec:
+  storageClassName: manual
+  selector:
+    matchLabels:
+      name: pv-multiplier
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi

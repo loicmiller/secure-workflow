@@ -269,11 +269,12 @@ data:
 
     role_perms = {
         "owner": [
-            {"method": "GET",  "path": "/api/adder"},
-            {"method": "POST",  "path": "/api/adder"},
-            {"method": "GET",  "path": "/api/multiplier"}
+            {"method": "POST",  "path": "/api/adder"}
         ],
         "adder": [
             {"method": "POST",  "path": "/api/multiplier"},
-        ]
+        ],
+        "multiplier": [
+            {"method": "POST",  "path": "/api/owner"}
+        ],
     }

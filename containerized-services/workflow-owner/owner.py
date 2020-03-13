@@ -17,9 +17,7 @@ def get_timestamp():
 # Data to serve with our API
 NUMBERS = {
     get_timestamp(): {
-        "first_number": "1",
-        "second_number": "2",
-        "sum": "3",
+        "result": "1",
         "timestamp": get_timestamp(),
     },
 }
@@ -33,24 +31,20 @@ def read_all():
     # Create the list of people from our data
     return [NUMBERS[key] for key in sorted(NUMBERS.keys())]
 
-def sum(numbers):
+def store(number):
     """
-    This function creates a new sum in the numbers structure
+    This function creates a new result in the numbers structure
     based on the passed in numbers data
 
     :param numbers:  numbers to create in numbers structure
     :return:        201 on success
     """
-    numb1 = numbers.get("first_number", None)
-    numb2 = numbers.get("second_number", None)
+    result = number.get("result", None)
 
-    sum = numb1 + numb2
 
     NUMBERS[get_timestamp()] = {
-        "first_number": numb1,
-        "second_number": numb2,
-        "sum": sum,
+        "result": result,
         "timestamp": get_timestamp(),
     }
 
-    return make_response("{sum} successfully created".format(sum=sum), 201)
+    return make_response("{result} successfully created".format(result=result), 201)
