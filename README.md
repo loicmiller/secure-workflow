@@ -1,5 +1,5 @@
 # Proof of Concept
-***
+
 This repository contains the code to deploy and test our proof of concept.
 
 The `services` folder contains the services we want to deploy inside our infrastructure.
@@ -12,15 +12,15 @@ The proof of concept has been realized with `minikube` v1.8.1, `Kubernetes` v1.1
 
 
 # Installation
-***
+
 ## Prerequisites
-***
+
 Check if virtualization is supported.
 On Linux, run `grep -E --color 'vmx|svm' /proc/cpuinfo`.
 
 
 ## Kubernetes
-***
+
 1. Download and install the latest release of `kubectl`.
 
 ```sh
@@ -49,7 +49,7 @@ minikube start --cpus=4 --memory=8192 -p "proof-of-concept"
 
 
 ## Istio
-***
+
 1. Download `Istio`.
 
 ```sh
@@ -83,7 +83,7 @@ EOF
 
 
 ## Open Policy Agent
-***
+
 1. Install the `OPA-Istio` CRDs and our custom policy.
 
 ```sh
@@ -98,7 +98,7 @@ kubectl label namespace default opa-istio-injection="enabled"
 
 
 ## Deploying the workflow
-***
+
 1. Use the `Docker` registry of `minikube`.
 
 ```sh
@@ -128,7 +128,7 @@ kubectl apply -f service-mesh/workflow-deployment.yaml
 
 
 # Using the proof of concept
-***
+
 IDs of pods can be retrived with the following:
 
 ```sh
@@ -164,7 +164,7 @@ kubectl exec -it $MULTIPLIER_POD_ID -c workflow-multiplier -- curl --user multip
 
 
 # Testing the proof of concept
-***
+
 Our proof of concept can be tested with the following:
 
 ```sh
