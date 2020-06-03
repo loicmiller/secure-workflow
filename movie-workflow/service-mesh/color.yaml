@@ -1,0 +1,54 @@
+##################################################################################################
+# color service
+##################################################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: color
+  labels:
+    app: color
+    service: color
+spec:
+  ports:
+  - port: 5000
+    name: http
+  selector:
+    app: color
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: color
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: color-v1
+  labels:
+    app: color
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: color
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: color
+        version: v1
+    spec:
+      serviceAccountName: color
+      containers:
+      - name: color
+        image: document-base:v1
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5000
+      - name: tcpdump
+        image: corfr/tcpdump
+        command:
+          - /bin/sleep
+          - infinity
+---

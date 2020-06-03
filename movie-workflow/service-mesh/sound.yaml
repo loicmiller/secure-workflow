@@ -1,0 +1,55 @@
+##################################################################################################
+# sound service
+##################################################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: sound
+  labels:
+    app: sound
+    service: sound
+spec:
+  ports:
+  - port: 5000
+    name: http
+  selector:
+    app: sound
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sound
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sound-v1
+  labels:
+    app: sound
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sound
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: sound
+        version: v1
+    spec:
+      serviceAccountName: sound
+      volumes:
+      containers:
+      - name: sound
+        image: document-base:v1
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5000
+      - name: tcpdump
+        image: corfr/tcpdump
+        command:
+          - /bin/sleep
+          - infinity
+---

@@ -1,0 +1,162 @@
+##################################################################################################
+# vfx-1 service
+##################################################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: vfx-1
+  labels:
+    app: vfx-1
+    service: vfx-1
+spec:
+  ports:
+  - port: 5000
+    name: http
+  selector:
+    app: vfx-1
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: vfx-1
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vfx-1-v1
+  labels:
+    app: vfx-1
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vfx-1
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: vfx-1
+        version: v1
+    spec:
+      serviceAccountName: vfx-1
+      containers:
+      - name: vfx-1
+        image: vfx-1:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5000
+      - name: tcpdump
+        image: corfr/tcpdump
+        command:
+          - /bin/sleep
+          - infinity
+---
+##################################################################################################
+# vfx-2 service
+##################################################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: vfx-2
+  labels:
+    app: vfx-2
+    service: vfx-2
+spec:
+  ports:
+  - port: 5000
+    name: http
+  selector:
+    app: vfx-2
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: vfx-2
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vfx-2-v1
+  labels:
+    app: vfx-2
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vfx-2
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: vfx-2
+        version: v1
+    spec:
+      serviceAccountName: vfx-2
+      containers:
+      - name: vfx-2
+        image: document-base:v1
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5000
+      - name: tcpdump
+        image: corfr/tcpdump
+        command:
+          - /bin/sleep
+          - infinity
+---
+##################################################################################################
+# vfx-3 service
+##################################################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: vfx-3
+  labels:
+    app: vfx-3
+    service: vfx-3
+spec:
+  ports:
+  - port: 5000
+    name: http
+  selector:
+    app: vfx-3
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: vfx-3
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vfx-3-v1
+  labels:
+    app: vfx-3
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vfx-3
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: vfx-3
+        version: v1
+    spec:
+      serviceAccountName: vfx-3
+      containers:
+      - name: vfx-3
+        image: document-base:v1
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5000
+      - name: tcpdump
+        image: corfr/tcpdump
+        command:
+          - /bin/sleep
+          - infinity
+---
