@@ -1,5 +1,5 @@
 ##################################################################################################
-# Owner service
+# owner service
 ##################################################################################################
 apiVersion: v1
 kind: Service
@@ -40,19 +40,12 @@ spec:
         version: v1
     spec:
       serviceAccountName: owner
-      volumes:
-      - name: pv-owner
-        persistentVolumeClaim:
-          claimName: pv-claim-owner
       containers:
       - name: owner
-        image: owner:latest
+        image: document-base:v1
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 5000
-        volumeMounts:
-        - mountPath: "/usr/share"
-          name: pv-owner
       - name: tcpdump
         image: corfr/tcpdump
         command:
@@ -60,60 +53,53 @@ spec:
           - infinity
 ---
 ##################################################################################################
-# Doctor service
+# vfx-1 service
 ##################################################################################################
 apiVersion: v1
 kind: Service
 metadata:
-  name: doctor-db
+  name: vfx-1
   labels:
-    app: doctor-db
-    service: doctor-db
+    app: vfx-1
+    service: vfx-1
 spec:
   ports:
   - port: 5000
     name: http
   selector:
-    app: doctor-db
+    app: vfx-1
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: doctor-db
+  name: vfx-1
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: doctor-db-v1
+  name: vfx-1-v1
   labels:
-    app: doctor-db
+    app: vfx-1
     version: v1
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: doctor-db
+      app: vfx-1
       version: v1
   template:
     metadata:
       labels:
-        app: doctor-db
+        app: vfx-1
         version: v1
     spec:
-      serviceAccountName: doctor-db
-      volumes:
-      - name: pv-doctor-db
-        persistentVolumeClaim:
-          claimName: pv-claim-doctor-db
+      serviceAccountName: vfx-1
       containers:
-      - name: doctor-db
-        image: doctor-db:latest
+      - name: vfx-1
+        image: vfx-1:latest
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 5000
-        volumeMounts:
-        - mountPath: "/usr/share"
-          name: pv-doctor-db
       - name: tcpdump
         image: corfr/tcpdump
         command:
@@ -121,60 +107,53 @@ spec:
           - infinity
 ---
 ##################################################################################################
-# Insurance service
+# vfx-2 service
 ##################################################################################################
 apiVersion: v1
 kind: Service
 metadata:
-  name: insurance-db
+  name: vfx-2
   labels:
-    app: insurance-db
-    service: insurance-db
+    app: vfx-2
+    service: vfx-2
 spec:
   ports:
   - port: 5000
     name: http
   selector:
-    app: insurance-db
+    app: vfx-2
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: insurance-db
+  name: vfx-2
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: insurance-db-v1
+  name: vfx-2-v1
   labels:
-    app: insurance-db
+    app: vfx-2
     version: v1
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: insurance-db
+      app: vfx-2
       version: v1
   template:
     metadata:
       labels:
-        app: insurance-db
+        app: vfx-2
         version: v1
     spec:
-      serviceAccountName: insurance-db
-      volumes:
-      - name: pv-insurance-db
-        persistentVolumeClaim:
-          claimName: pv-claim-insurance-db
+      serviceAccountName: vfx-2
       containers:
-      - name: insurance-db
-        image: insurance-db:latest
+      - name: vfx-2
+        image: document-base:latest
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 5000
-        volumeMounts:
-        - mountPath: "/usr/share"
-          name: pv-insurance-db
       - name: tcpdump
         image: corfr/tcpdump
         command:
@@ -182,60 +161,53 @@ spec:
           - infinity
 ---
 ##################################################################################################
-# SNIIRAM service
+# vfx-3 service
 ##################################################################################################
 apiVersion: v1
 kind: Service
 metadata:
-  name: sniiram-db
+  name: vfx-3
   labels:
-    app: sniiram-db
-    service: sniiram-db
+    app: vfx-3
+    service: vfx-3
 spec:
   ports:
   - port: 5000
     name: http
   selector:
-    app: sniiram-db
+    app: vfx-3
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: sniiram-db
+  name: vfx-3
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: sniiram-db-v1
+  name: vfx-3-v1
   labels:
-    app: sniiram-db
+    app: vfx-3
     version: v1
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: sniiram-db
+      app: vfx-3
       version: v1
   template:
     metadata:
       labels:
-        app: sniiram-db
+        app: vfx-3
         version: v1
     spec:
-      serviceAccountName: sniiram-db
-      volumes:
-      - name: pv-sniiram-db
-        persistentVolumeClaim:
-          claimName: pv-claim-sniiram-db
+      serviceAccountName: vfx-3
       containers:
-      - name: sniiram-db
-        image: sniiram-db:latest
+      - name: vfx-3
+        image: document-base:latest
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 5000
-        volumeMounts:
-        - mountPath: "/usr/share"
-          name: pv-sniiram-db
       - name: tcpdump
         image: corfr/tcpdump
         command:
@@ -243,60 +215,162 @@ spec:
           - infinity
 ---
 ##################################################################################################
-# Research group service
+# color service
 ##################################################################################################
 apiVersion: v1
 kind: Service
 metadata:
-  name: research-group-db
+  name: color
   labels:
-    app: research-group-db
-    service: research-group-db
+    app: color
+    service: color
 spec:
   ports:
   - port: 5000
     name: http
   selector:
-    app: research-group-db
+    app: color
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: research-group-db
+  name: color
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: research-group-db-v1
+  name: color-v1
   labels:
-    app: research-group-db
+    app: color
     version: v1
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: research-group-db
+      app: color
       version: v1
   template:
     metadata:
       labels:
-        app: research-group-db
+        app: color
         version: v1
     spec:
-      serviceAccountName: research-group-db
-      volumes:
-      - name: pv-research-group-db
-        persistentVolumeClaim:
-          claimName: pv-claim-research-group-db
+      serviceAccountName: color
       containers:
-      - name: research-group-db
-        image: research-group-db:latest
+      - name: color
+        image: document-base:latest
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 5000
-        volumeMounts:
-        - mountPath: "/usr/share"
-          name: pv-research-group-db
+      - name: tcpdump
+        image: corfr/tcpdump
+        command:
+          - /bin/sleep
+          - infinity
+---
+##################################################################################################
+# sound service
+##################################################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: sound
+  labels:
+    app: sound
+    service: sound
+spec:
+  ports:
+  - port: 5000
+    name: http
+  selector:
+    app: sound
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sound
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sound-v1
+  labels:
+    app: sound
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sound
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: sound
+        version: v1
+    spec:
+      serviceAccountName: sound
+      volumes:
+      containers:
+      - name: sound
+        image: document-base:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5000
+      - name: tcpdump
+        image: corfr/tcpdump
+        command:
+          - /bin/sleep
+          - infinity
+---
+##################################################################################################
+# hdr service
+##################################################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: hdr
+  labels:
+    app: hdr
+    service: hdr
+spec:
+  ports:
+  - port: 5000
+    name: http
+  selector:
+    app: hdr
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: hdr
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hdr-v1
+  labels:
+    app: hdr
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hdr
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: hdr
+        version: v1
+    spec:
+      serviceAccountName: hdr
+      containers:
+      - name: hdr
+        image: document-base:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5000
       - name: tcpdump
         image: corfr/tcpdump
         command:
