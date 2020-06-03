@@ -150,7 +150,7 @@ spec:
       serviceAccountName: vfx-2
       containers:
       - name: vfx-2
-        image: document-base:latest
+        image: document-base:v1
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 5000
@@ -204,7 +204,7 @@ spec:
       serviceAccountName: vfx-3
       containers:
       - name: vfx-3
-        image: document-base:latest
+        image: document-base:v1
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 5000
@@ -258,7 +258,7 @@ spec:
       serviceAccountName: color
       containers:
       - name: color
-        image: document-base:latest
+        image: document-base:v1
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 5000
@@ -313,7 +313,7 @@ spec:
       volumes:
       containers:
       - name: sound
-        image: document-base:latest
+        image: document-base:v1
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 5000
@@ -367,7 +367,7 @@ spec:
       serviceAccountName: hdr
       containers:
       - name: hdr
-        image: document-base:latest
+        image: document-base:v1
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 5000
