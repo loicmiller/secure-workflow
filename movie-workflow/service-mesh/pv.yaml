@@ -1,0 +1,184 @@
+##################################################################################################
+# Specialist PV
+##################################################################################################
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-specialist
+  labels:
+    type: local
+    name: pv-specialist
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/data-specialist"
+---
+##################################################################################################
+# Specialist PV
+##################################################################################################
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-doctor
+  labels:
+    type: local
+    name: pv-doctor
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/data-doctor"
+##################################################################################################
+# Insurance PV
+##################################################################################################
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-insurance
+  labels:
+    type: local
+    name: pv-insurance
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/data-insurance"
+---
+##################################################################################################
+# SNIIRAM PV
+##################################################################################################
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-sniiram
+  labels:
+    type: local
+    name: pv-sniiram
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/data-sniiram"
+---
+##################################################################################################
+# Research group PV
+##################################################################################################
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-research-group
+  labels:
+    type: local
+    name: pv-research-group
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/data-research-group"
+---
+##################################################################################################
+# Specialist PVC
+##################################################################################################
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pv-claim-specialist
+spec:
+  storageClassName: manual
+  selector:
+    matchLabels:
+      name: pv-specialist
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+##################################################################################################
+# Doctor PVC
+##################################################################################################
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pv-claim-doctor
+spec:
+  storageClassName: manual
+  selector:
+    matchLabels:
+      name: pv-doctor
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+##################################################################################################
+# Insurance PVC
+##################################################################################################
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pv-claim-insurance
+spec:
+  storageClassName: manual
+  selector:
+    matchLabels:
+      name: pv-insurance
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+##################################################################################################
+# SNIIRAM PVC
+##################################################################################################
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pv-claim-sniiram
+spec:
+  storageClassName: manual
+  selector:
+    matchLabels:
+      name: pv-sniiram
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+##################################################################################################
+# Research group PVC
+##################################################################################################
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pv-claim-research-group
+spec:
+  storageClassName: manual
+  selector:
+    matchLabels:
+      name: pv-research-group
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---

@@ -1,0 +1,305 @@
+##################################################################################################
+# Specialist service
+##################################################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: specialist-db
+  labels:
+    app: specialist-db
+    service: specialist-db
+spec:
+  ports:
+  - port: 5000
+    name: http
+  selector:
+    app: specialist-db
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: specialist-db
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: specialist-db-v1
+  labels:
+    app: specialist-db
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: specialist-db
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: specialist-db
+        version: v1
+    spec:
+      serviceAccountName: specialist-db
+      volumes:
+      - name: pv-specialist-db
+        persistentVolumeClaim:
+          claimName: pv-claim-specialist-db
+      containers:
+      - name: specialist-db
+        image: specialist-db:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5000
+        volumeMounts:
+        - mountPath: "/usr/share"
+          name: pv-specialist-db
+      - name: tcpdump
+        image: corfr/tcpdump
+        command:
+          - /bin/sleep
+          - infinity
+---
+##################################################################################################
+# Doctor service
+##################################################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: doctor-db
+  labels:
+    app: doctor-db
+    service: doctor-db
+spec:
+  ports:
+  - port: 5000
+    name: http
+  selector:
+    app: doctor-db
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: doctor-db
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: doctor-db-v1
+  labels:
+    app: doctor-db
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: doctor-db
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: doctor-db
+        version: v1
+    spec:
+      serviceAccountName: doctor-db
+      volumes:
+      - name: pv-doctor-db
+        persistentVolumeClaim:
+          claimName: pv-claim-doctor-db
+      containers:
+      - name: doctor-db
+        image: doctor-db:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5000
+        volumeMounts:
+        - mountPath: "/usr/share"
+          name: pv-doctor-db
+      - name: tcpdump
+        image: corfr/tcpdump
+        command:
+          - /bin/sleep
+          - infinity
+---
+##################################################################################################
+# Insurance service
+##################################################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: insurance-db
+  labels:
+    app: insurance-db
+    service: insurance-db
+spec:
+  ports:
+  - port: 5000
+    name: http
+  selector:
+    app: insurance-db
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: insurance-db
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: insurance-db-v1
+  labels:
+    app: insurance-db
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: insurance-db
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: insurance-db
+        version: v1
+    spec:
+      serviceAccountName: insurance-db
+      volumes:
+      - name: pv-insurance-db
+        persistentVolumeClaim:
+          claimName: pv-claim-insurance-db
+      containers:
+      - name: insurance-db
+        image: insurance-db:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5000
+        volumeMounts:
+        - mountPath: "/usr/share"
+          name: pv-insurance-db
+      - name: tcpdump
+        image: corfr/tcpdump
+        command:
+          - /bin/sleep
+          - infinity
+---
+##################################################################################################
+# SNIIRAM service
+##################################################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: sniiram-db
+  labels:
+    app: sniiram-db
+    service: sniiram-db
+spec:
+  ports:
+  - port: 5000
+    name: http
+  selector:
+    app: sniiram-db
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sniiram-db
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sniiram-db-v1
+  labels:
+    app: sniiram-db
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sniiram-db
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: sniiram-db
+        version: v1
+    spec:
+      serviceAccountName: sniiram-db
+      volumes:
+      - name: pv-sniiram-db
+        persistentVolumeClaim:
+          claimName: pv-claim-sniiram-db
+      containers:
+      - name: sniiram-db
+        image: sniiram-db:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5000
+        volumeMounts:
+        - mountPath: "/usr/share"
+          name: pv-sniiram-db
+      - name: tcpdump
+        image: corfr/tcpdump
+        command:
+          - /bin/sleep
+          - infinity
+---
+##################################################################################################
+# Research group service
+##################################################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: research-group-db
+  labels:
+    app: research-group-db
+    service: research-group-db
+spec:
+  ports:
+  - port: 5000
+    name: http
+  selector:
+    app: research-group-db
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: research-group-db
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: research-group-db-v1
+  labels:
+    app: research-group-db
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: research-group-db
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: research-group-db
+        version: v1
+    spec:
+      serviceAccountName: research-group-db
+      volumes:
+      - name: pv-research-group-db
+        persistentVolumeClaim:
+          claimName: pv-claim-research-group-db
+      containers:
+      - name: research-group-db
+        image: research-group-db:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5000
+        volumeMounts:
+        - mountPath: "/usr/share"
+          name: pv-research-group-db
+      - name: tcpdump
+        image: corfr/tcpdump
+        command:
+          - /bin/sleep
+          - infinity
+---
