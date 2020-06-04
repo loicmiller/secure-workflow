@@ -43,7 +43,7 @@ spec:
       volumes:
       containers:
       - name: sound
-        image: gcr.io/poc-workflow-279219/document-base:v1
+        image: gcr.io/poc-workflow-no-opa/document-base:v1
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 5000
