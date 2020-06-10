@@ -132,6 +132,8 @@ def get_startup_time(pod):
 
     pod.transition_times.append((pod.name, pod_scheduled_transition_time, initialized_transition_time, containers_ready_transition_time, ready_transition_time, startup_time))
 
+    return pod.transition_times[-1]
+
 
 def delete_pod(pod):
     delete_pod = shlex.split("kubectl --context {} delete pod {}".format(pod.context, pod.pod_id))
@@ -460,7 +462,9 @@ if __name__ == "__main__":
         print("\n############################## Measure number {} ##############################".format(measure))
         for pod in pods:
             print("\n################################### Pod {} ###################################".format(pod.name))
-            get_startup_time(pod)
+            last_pod_tuple = get_startup_time(pod)
+            with open(args.output_file, 'a+') as f:
+                f.write(str(last_pod_tuple) + "\n")
             delete_pod(pod)
             update_pod(pods, pod)
 
@@ -477,10 +481,10 @@ if __name__ == "__main__":
     print("Storing measurements")
     print("###############################################################################")
     # Store measurements
-    with open(args.output_file, 'a+') as f:
-        for pod in pods:
-            for line in pod.transition_times:
-                f.write(str(line) + "\n")
+    #with open(args.output_file, 'a+') as f:
+    #    for pod in pods:
+    #        for line in pod.transition_times:
+    #            f.write(str(line) + "\n")
 
     terminate_app(0)
 
