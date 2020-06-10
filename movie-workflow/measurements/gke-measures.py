@@ -47,14 +47,14 @@ def get_contexts():
 # Returns pods available in a given context
 def get_pods(context):
     get_pods = shlex.split("kubectl --context {} get pods -o wide".format(context))
-    if args.verbose >= 2:
+    if args.verbose >= 3:
         print("Command: [{}]".format(", ".join(map(str, get_pods))))
     get_pods_p = Popen(get_pods,
                          stdout=subprocess.PIPE,
                          universal_newlines=True)
 
     tr = shlex.split("tr -s ' '")
-    if args.verbose >= 2:
+    if args.verbose >= 3:
         print("Command: [{}]".format(", ".join(map(str, tr))))
     tr_p = Popen(tr,
                          stdin=get_pods_p.stdout,
@@ -94,7 +94,7 @@ def get_pod(pods, name):
 
 def get_startup_time(pod):
     get_pod = shlex.split("kubectl --context {} get pod -o json {}".format(pod.context, pod.pod_id))
-    if args.verbose >= 2:
+    if args.verbose >= 3:
         print("Command: [{}]".format(", ".join(map(str, get_pod))))
     get_pod_p = Popen(get_pod,
                          stdout=subprocess.PIPE,
@@ -135,7 +135,7 @@ def get_startup_time(pod):
 
 def delete_pod(pod):
     delete_pod = shlex.split("kubectl --context {} delete pod {}".format(pod.context, pod.pod_id))
-    if args.verbose >= 2:
+    if args.verbose >= 3:
         print("Command: [{}]".format(", ".join(map(str, delete_pod))))
     delete_pod_p = Popen(delete_pod,
                          stdout=subprocess.PIPE,
