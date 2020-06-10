@@ -427,6 +427,9 @@ class Pod:
 
 #TODO Python doc string
 if __name__ == "__main__":
+    print("###############################################################################")
+    print("Getting arguments")
+    print("###############################################################################")
     # Create a parser
     parser = get_parser()
 
@@ -437,6 +440,9 @@ if __name__ == "__main__":
         print(args)
 
 
+    print("###############################################################################")
+    print("Creating pod objects")
+    print("###############################################################################")
     # Create pod objects
     pods = []
     for context in contexts:
@@ -448,6 +454,9 @@ if __name__ == "__main__":
             print(pod)
 
 
+    print("###############################################################################")
+    print("Getting measurements")
+    print("###############################################################################")
     # Get measurements
     for measure in range(number_of_measures):
         print("Measure number {}".format(measure))
@@ -456,6 +465,9 @@ if __name__ == "__main__":
             #delete_pod(pod)
             #update_pod(pods, pod)
 
+    print("###############################################################################")
+    print("Printing measurements")
+    print("###############################################################################")
     for pod in pods:
         print(pod.transition_times)
 
