@@ -72,7 +72,7 @@ def get_pods(context):
         if args.verbose >= 2:
             print("Line: {}".format(line))
         pod_id = line.split()[0]
-        pod_name = '-'.join(pod_id.split('-')[:-2])
+        pod_name = pod_id.split('-v1')[0]
         pods.append(pod_name)
 
     if args.verbose >= 2:
