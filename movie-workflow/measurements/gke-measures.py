@@ -158,8 +158,7 @@ def update_pod(pods, pod_to_update):
 
 # Exit the program
 def terminate_app(code):
-    if not args.quiet:
-        print("Exiting program...")
+    print("Exiting program...")
     sys.exit(code)
 
 
@@ -171,7 +170,7 @@ def get_parser():
     parser = argparse.ArgumentParser(description="Measures for secure architecture")
     parser.add_argument("--version", action="version", version='%(prog)s 1.0')
     parser.add_argument("-v", "--verbose", action="count", default=0, help="increase output verbosity")
-    parser.add_argument("-q", "--quiet", action="store_true", help="hide command outputs")
+    parser.add_argument("-o", "--output-file", type=str, metavar="FILE", default="measurements.dat", help="file to store measurements")
 
     return parser
 
@@ -309,7 +308,7 @@ class Pod:
         return output
 
 
-    # Get the IP of the service
+    # Returns the IP of the service
     def get_service_ip(self, name, context):
         # kubectl get services | grep "adder" | tr -s ' ' | cut -d ' ' -f 5 | cut -d '/' -f 1
         get_services = shlex.split("kubectl --context {} get services".format(context))
@@ -361,7 +360,7 @@ class Pod:
         return output
 
 
-    # Get the port number of the service
+    # Returns the port number of the service
     def get_service_port(self, name, context):
         # kubectl get services | grep "adder" | tr -s ' ' | cut -d ' ' -f 5 | cut -d '/' -f 1
         get_services = shlex.split("kubectl --context {} get services".format(context))
@@ -436,8 +435,7 @@ if __name__ == "__main__":
     # Parse arguments
     args = parser.parse_args()
 
-    if not args.quiet:
-        print(args)
+    print(args)
 
 
     print("\n\n###############################################################################")
@@ -449,9 +447,9 @@ if __name__ == "__main__":
         context_pods = get_pods(context)
         for pod in context_pods:
             pods.append(Pod(pod, context))
-    if not args.quiet:
-        for pod in pods:
-            print(pod)
+
+    for pod in pods:
+        print(pod)
 
 
     print("\n\n###############################################################################")
@@ -461,20 +459,28 @@ if __name__ == "__main__":
     for measure in range(number_of_measures):
         print("\n############################## Measure number {} ##############################".format(measure))
         for pod in pods:
+        print("\n################################### Pod {} ###################################".format(pod.name))
             get_startup_time(pod)
             delete_pod(pod)
             update_pod(pods, pod)
 
-    print("\n\n###############################################################################")
-    print("Printing measurements")
-    print("###############################################################################")
-    for pod in pods:
-        print(pod.transition_times)
 
+    if args.verbose >= 2:
+        print("\n\n###############################################################################")
+        print("Printing measurements")
+        print("###############################################################################")
+        for pod in pods:
+            print(pod.transition_times)
+
+
+    print("\n\n###############################################################################")
+    print("Storing measurements")
+    print("###############################################################################")
     # Store measurements
-    #with open("measurements.dat", a+) as f:
-    #    for pod in pods:
-    #        f.write(pod.transition_times)
+    with open(args.output_file, a+) as f:
+        for pod in pods:
+            for line in pod.transition_times:
+                f.write(line)
 
     terminate_app(0)
 
