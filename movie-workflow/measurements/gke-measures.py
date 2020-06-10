@@ -68,9 +68,12 @@ def get_pods(context):
 
     pods = []
     for line in stdout:
-        pod_id = line.split()[0]
-        pod_name = pod_id.split('-')[0]
-        pods.append(pod_name)
+        print(line)
+        #pod_id = line.split()[0]
+        #pod_name = pod_id.split('-')[0]
+        #pods.append(pod_name)
+
+    terminate_app(0)
 
     return pods
 
