@@ -480,7 +480,7 @@ if __name__ == "__main__":
     with open(args.output_file, 'a+') as f:
         for pod in pods:
             for line in pod.transition_times:
-                f.write(str(line) + ",\n")
+                f.write(str(line) + "\n")
 
     terminate_app(0)
 
