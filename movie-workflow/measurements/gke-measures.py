@@ -67,7 +67,7 @@ def get_pods(context):
         print(stdout)
 
     pods = []
-    for line in stdout:
+    for line in stdout[1:]:
         print(line)
         #pod_id = line.split()[0]
         #pod_name = pod_id.split('-')[0]
