@@ -66,14 +66,15 @@ def get_pods(context):
     if args.verbose >= 2:
         print(stdout)
 
+    stdout_pods = stdout[0].split('\n')[1:]
     pods = []
-    for line in stdout[0].split('\n')[1:]:
-        print(line)
-        #pod_id = line.split()[0]
-        #pod_name = pod_id.split('-')[0]
-        #pods.append(pod_name)
+    for line in stdout_pods:
+        pod_id = line.split()[0]
+        pod_name = pod_id.split('-')[0]
+        pods.append(pod_name)
 
-    terminate_app(0)
+    if args.verbose >= 2:
+        print(pods)
 
     return pods
 
