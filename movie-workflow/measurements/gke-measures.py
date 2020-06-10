@@ -25,7 +25,7 @@ import json # Get transition times
 contexts = ["owner", "vfx", "color", "sound", "hdr"]
 services = ["owner", "vfx1", "vfx2", "vfx3", "color", "sound", "hdr"] # workflow services
 
-number_of_measures = 10 # Number of measures to realize
+number_of_measures = 1 # Number of measures to realize
 
 
 # Returns the contexts of the multi-cluster
@@ -480,7 +480,7 @@ if __name__ == "__main__":
     with open(args.output_file, 'a+') as f:
         for pod in pods:
             for line in pod.transition_times:
-                f.write(line)
+                f.write(str(line + ",\n")
 
     terminate_app(0)
 
