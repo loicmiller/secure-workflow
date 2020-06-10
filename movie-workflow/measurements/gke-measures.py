@@ -127,9 +127,8 @@ def get_startup_time(pod):
             terminate_app(0)
 
     ready_dt = datetime.strptime(ready_transition_time, "%Y-%m-%dT%H:%M:%SZ")
-    pod_scheduled_dt = datetime.strptime(ready_transition_time, "%Y-%m-%dT%H:%M:%SZ")
+    pod_scheduled_dt = datetime.strptime(pod_scheduled_transition_time, "%Y-%m-%dT%H:%M:%SZ")
     startup_time = (ready_dt - pod_scheduled_dt).total_seconds()
-    print("BUG: {}   {}   {}".format(ready_dt, pod_scheduled_dt, startup_time))
 
     pod.transition_times.append((pod.name, pod_scheduled_transition_time, initialized_transition_time, containers_ready_transition_time, ready_transition_time, startup_time))
 
