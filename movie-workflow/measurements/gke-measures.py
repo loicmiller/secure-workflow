@@ -145,7 +145,7 @@ def update_pod(pods, pod_to_update):
     updated_pod.transition_times = pod_to_update.transition_times
 
     for i, pod in enumerate(pods):
-        if pod.name == updated_pod.name
+        if pod.name == updated_pod.name:
             pods[i] = updated_pod
 
 
