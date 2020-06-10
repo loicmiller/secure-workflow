@@ -109,7 +109,7 @@ def get_startup_time(pod):
     containers_ready_transition_time = ""
     ready_transition_time = ""
 
-    command_output = json.loads(stdout)
+    command_output = json.loads(stdout[0])
     for status in command_output["status"]["conditions"]:
         if args.verbose >= 2:
             print(status)
