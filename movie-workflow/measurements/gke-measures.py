@@ -101,8 +101,6 @@ def get_startup_time(pod):
                          universal_newlines=True)
 
     stdout = get_pod_p.communicate()
-    if args.verbose >= 2:
-        print(stdout)
 
     pod_scheduled_transition_time = ""
     initialized_transition_time = ""
@@ -110,6 +108,8 @@ def get_startup_time(pod):
     ready_transition_time = ""
 
     command_output = json.loads(stdout[0])
+    if args.verbose >= 3:
+        print(command_output["status"]["conditions"])
     for status in command_output["status"]["conditions"]:
         if args.verbose >= 2:
             print(status)
