@@ -25,7 +25,7 @@ import json # Get transition times
 contexts = ["owner", "vfx", "color", "sound", "hdr"]
 services = ["owner", "vfx1", "vfx2", "vfx3", "color", "sound", "hdr"] # workflow services
 
-number_of_measures = 30 # Number of measures to realize
+number_of_measures = 10 # Number of measures to realize
 
 
 # Returns the contexts of the multi-cluster
@@ -459,7 +459,7 @@ if __name__ == "__main__":
     for measure in range(number_of_measures):
         print("\n############################## Measure number {} ##############################".format(measure))
         for pod in pods:
-        print("\n################################### Pod {} ###################################".format(pod.name))
+            print("\n################################### Pod {} ###################################".format(pod.name))
             get_startup_time(pod)
             delete_pod(pod)
             update_pod(pods, pod)
