@@ -210,14 +210,14 @@ class Pod:
     # Returns the pod ID
     def get_pod_id(self, name, context):
         get_pods = shlex.split("kubectl --context {} get pods".format(context))
-        if args.verbose >= 2:
+        if args.verbose >= 3:
             print("Command: [{}]".format(", ".join(map(str, get_pods))))
         get_pods_p = Popen(get_pods,
                              stdout=subprocess.PIPE,
                              universal_newlines=True)
 
         grep = shlex.split("grep " + name)
-        if args.verbose >= 2:
+        if args.verbose >= 3:
             print("Command: [{}]".format(", ".join(map(str, grep))))
         grep_p = Popen(grep,
                              stdin=get_pods_p.stdout,
@@ -226,7 +226,7 @@ class Pod:
         get_pods_p.stdout.close()
 
         tr = shlex.split("tr -s ' '")
-        if args.verbose >= 2:
+        if args.verbose >= 3:
             print("Command: [{}]".format(", ".join(map(str, tr))))
         tr_p = Popen(tr,
                              stdin=grep_p.stdout,
@@ -235,7 +235,7 @@ class Pod:
         grep_p.stdout.close()
 
         cut = shlex.split("cut -d ' ' -f 1")
-        if args.verbose >= 2:
+        if args.verbose >= 3:
             print("Command: [{}]".format(", ".join(map(str, cut))))
         cut_p = Popen(cut,
                              stdin=tr_p.stdout,
@@ -244,7 +244,7 @@ class Pod:
         tr_p.stdout.close()
 
         awk = shlex.split("awk 'NR>1{print PREV} {PREV=$0} END{printf(\"%s\",$0)}'")
-        if args.verbose >= 2:
+        if args.verbose >= 3:
             print("Command: [{}]".format(", ".join(map(str, awk))))
         awk_p = Popen(awk,
                              stdin=cut_p.stdout,
@@ -261,14 +261,14 @@ class Pod:
     # Returns the pod IP
     def get_pod_ip(self, name, context):
         get_pods = shlex.split("kubectl --context {} get pods -o wide".format(context))
-        if args.verbose >= 2:
+        if args.verbose >= 3:
             print("Command: [{}]".format(", ".join(map(str, get_pods))))
         get_pods_p = Popen(get_pods,
                              stdout=subprocess.PIPE,
                              universal_newlines=True)
 
         grep = shlex.split("grep " + name)
-        if args.verbose >= 2:
+        if args.verbose >= 3:
             print("Command: [{}]".format(", ".join(map(str, grep))))
         grep_p = Popen(grep,
                              stdin=get_pods_p.stdout,
@@ -277,7 +277,7 @@ class Pod:
         get_pods_p.stdout.close()
 
         tr = shlex.split("tr -s ' '")
-        if args.verbose >= 2:
+        if args.verbose >= 3:
             print("Command: [{}]".format(", ".join(map(str, tr))))
         tr_p = Popen(tr,
                              stdin=grep_p.stdout,
@@ -286,7 +286,7 @@ class Pod:
         grep_p.stdout.close()
 
         cut = shlex.split("cut -d ' ' -f 6")
-        if args.verbose >= 2:
+        if args.verbose >= 3:
             print("Command: [{}]".format(", ".join(map(str, cut))))
         cut_p = Popen(cut,
                              stdin=tr_p.stdout,
@@ -295,7 +295,7 @@ class Pod:
         tr_p.stdout.close()
 
         awk = shlex.split("awk 'NR>1{print PREV} {PREV=$0} END{printf(\"%s\",$0)}'")
-        if args.verbose >= 2:
+        if args.verbose >= 3:
             print("Command: [{}]".format(", ".join(map(str, awk))))
         awk_p = Popen(awk,
                              stdin=cut_p.stdout,
@@ -313,14 +313,14 @@ class Pod:
     def get_service_ip(self, name, context):
         # kubectl get services | grep "adder" | tr -s ' ' | cut -d ' ' -f 5 | cut -d '/' -f 1
         get_services = shlex.split("kubectl --context {} get services".format(context))
-        if args.verbose >= 2:
+        if args.verbose >= 3:
             print("Command: [{}]".format(", ".join(map(str, get_services))))
         get_services_p = Popen(get_services,
                              stdout=subprocess.PIPE,
                              universal_newlines=True)
 
         grep = shlex.split("grep " + name)
-        if args.verbose >= 2:
+        if args.verbose >= 3:
             print("Command: [{}]".format(", ".join(map(str, grep))))
         grep_p = Popen(grep,
                              stdin=get_services_p.stdout,
@@ -329,7 +329,7 @@ class Pod:
         get_services_p.stdout.close()
 
         tr = shlex.split("tr -s ' '")
-        if args.verbose >= 2:
+        if args.verbose >= 3:
             print("Command: [{}]".format(", ".join(map(str, tr))))
         tr_p = Popen(tr,
                              stdin=grep_p.stdout,
@@ -338,7 +338,7 @@ class Pod:
         grep_p.stdout.close()
 
         cut = shlex.split("cut -d ' ' -f 3")
-        if args.verbose >= 2:
+        if args.verbose >= 3:
             print("Command: [{}]".format(", ".join(map(str, cut))))
         cut_p = Popen(cut,
                              stdin=tr_p.stdout,
@@ -347,7 +347,7 @@ class Pod:
         tr_p.stdout.close()
 
         awk = shlex.split("awk 'NR>1{print PREV} {PREV=$0} END{printf(\"%s\",$0)}'")
-        if args.verbose >= 2:
+        if args.verbose >= 3:
             print("Command: [{}]".format(", ".join(map(str, awk))))
         awk_p = Popen(awk,
                              stdin=cut_p.stdout,
@@ -365,14 +365,14 @@ class Pod:
     def get_service_port(self, name, context):
         # kubectl get services | grep "adder" | tr -s ' ' | cut -d ' ' -f 5 | cut -d '/' -f 1
         get_services = shlex.split("kubectl --context {} get services".format(context))
-        if args.verbose >= 2:
+        if args.verbose >= 3:
             print("Command: [{}]".format(", ".join(map(str, get_services))))
         get_services_p = Popen(get_services,
                              stdout=subprocess.PIPE,
                              universal_newlines=True)
 
         grep = shlex.split("grep " + name)
-        if args.verbose >= 2:
+        if args.verbose >= 3:
             print("Command: [{}]".format(", ".join(map(str, grep))))
         grep_p = Popen(grep,
                              stdin=get_services_p.stdout,
@@ -381,7 +381,7 @@ class Pod:
         get_services_p.stdout.close()
 
         tr = shlex.split("tr -s ' '")
-        if args.verbose >= 2:
+        if args.verbose >= 3:
             print("Command: [{}]".format(", ".join(map(str, tr))))
         tr_p = Popen(tr,
                              stdin=grep_p.stdout,
@@ -390,7 +390,7 @@ class Pod:
         grep_p.stdout.close()
 
         cut = shlex.split("cut -d ' ' -f 5")
-        if args.verbose >= 2:
+        if args.verbose >= 3:
             print("Command: [{}]".format(", ".join(map(str, cut))))
         cut_p = Popen(cut,
                              stdin=tr_p.stdout,
@@ -399,7 +399,7 @@ class Pod:
         tr_p.stdout.close()
 
         second_cut = shlex.split("cut -d '/' -f 1")
-        if args.verbose >= 2:
+        if args.verbose >= 3:
             print("Command: [{}]".format(", ".join(map(str, second_cut))))
         second_cut_p = Popen(second_cut,
                              stdin=cut_p.stdout,
@@ -408,7 +408,7 @@ class Pod:
         cut_p.stdout.close()
 
         awk = shlex.split("awk 'NR>1{print PREV} {PREV=$0} END{printf(\"%s\",$0)}'")
-        if args.verbose >= 2:
+        if args.verbose >= 3:
             print("Command: [{}]".format(", ".join(map(str, awk))))
         awk_p = Popen(awk,
                              stdin=second_cut_p.stdout,
