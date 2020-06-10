@@ -477,7 +477,7 @@ if __name__ == "__main__":
     print("Storing measurements")
     print("###############################################################################")
     # Store measurements
-    with open(args.output_file, a+) as f:
+    with open(args.output_file, 'a+') as f:
         for pod in pods:
             for line in pod.transition_times:
                 f.write(line)
