@@ -25,7 +25,7 @@ import json # Get transition times
 contexts = ["owner", "vfx", "color", "sound", "hdr"]
 services = ["owner", "vfx1", "vfx2", "vfx3", "color", "sound", "hdr"] # workflow services
 
-number_of_measures = 30 # Number of measures to realize
+number_of_measures = 5 # Number of measures to realize
 
 
 # Returns the contexts of the multi-cluster
@@ -129,6 +129,7 @@ def get_startup_time(pod):
     ready_dt = datetime.strptime(ready_transition_time, "%Y-%m-%dT%H:%M:%SZ")
     pod_scheduled_dt = datetime.strptime(ready_transition_time, "%Y-%m-%dT%H:%M:%SZ")
     startup_time = (ready_dt - pod_scheduled_dt).total_seconds()
+    print("BUG: {}   {}   {}".format(ready_dt, pod_scheduled_dt, startup_time))
 
     pod.transition_times.append((pod.name, pod_scheduled_transition_time, initialized_transition_time, containers_ready_transition_time, ready_transition_time, startup_time))
 
