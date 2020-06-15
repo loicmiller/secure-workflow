@@ -12,7 +12,7 @@ basePath: /api
 
 # Paths supported by the server application
 paths:
-  /adder:
+  /docs:
     get:
       operationId: document-base.get_document
       tags:
