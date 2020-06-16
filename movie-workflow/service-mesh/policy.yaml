@@ -329,7 +329,7 @@ data:
       # Match method and path (RBAC)
       rbac_logic
 
-      current_time := time.clock(time.now_ns())
+      current_time := time.clock([time.now_ns(), "Europe/Paris"])
       current_time[0] > 8
       current_time[0] < 17
     }
@@ -351,7 +351,7 @@ data:
       # Match method and path (RBAC)
       rbac_logic
 
-      current_time := time.clock(time.now_ns())
+      current_time := time.clock([time.now_ns(), "Europe/Paris"])
       current_time[0] > 8
       current_time[0] < 17
     }
@@ -362,7 +362,7 @@ data:
       # Match method and path (RBAC)
       rbac_logic
 
-      current_time := time.clock(time.now_ns())
+      current_time := time.clock([time.now_ns(), "Europe/Paris"])
       current_time[0] > 8
       current_time[0] < 17
     }
@@ -373,7 +373,7 @@ data:
       # Match method and path (RBAC)
       rbac_logic
 
-      current_time := time.clock(time.now_ns())
+      current_time := time.clock([time.now_ns(), "Europe/Paris"])
       current_time[0] > 8
       current_time[0] < 17
     }
@@ -384,7 +384,7 @@ data:
       # Match method and path (RBAC)
       rbac_logic
 
-      current_time := time.clock(time.now_ns())
+      current_time := time.clock([time.now_ns(), "Europe/Paris"])
       current_time[0] > 8
       current_time[0] < 17
     }
