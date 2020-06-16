@@ -288,6 +288,4 @@ data:
       user_name == "vfx-3"
 
       current_time := time.clock([time.now_ns(), "Europe/Paris"])
-      to_number(current_time[hour]) >= 8
-      to_number(current_time[hour]) <= 17
     }
