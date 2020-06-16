@@ -444,13 +444,9 @@ def request(src, dst, request_type, lock):
 
     # While capture is running, POST request from owner to adder
     if request_type == "GET":
-        subprocess_shell_call("kubectl --context " + src.context + " exec -it " + src.pod_id + " -c workflow-" + src.name + " -- curl --user " + src.name + ":password --header 'Accept: application/json' 'http://" + dst.service_ip + ":" + dst.service_port + "/api/" + dst.name + "' -v", lock)
+        subprocess_shell_call("kubectl --context " + src.context + " exec -it " + src.pod_id + " -c " + src.name + " -- curl --user " + src.name + ":password -X GET --header 'Accept: application/json' 'http://" + dst.service_ip + ":" + dst.service_port + "/api/" + dst.name + "' -v", lock)
     else: # POST request
-        if dst.name == "owner":
-            subprocess_shell_call("kubectl --context " + src.context + " exec -it " + src.pod_id + " -c workflow-" + src.name + " -- curl --user " + src.name + ":password --header 'Content-Type: application/json' --header 'Accept: text/html' -d '{ \"result\": 4 }' 'http://" + dst.service_ip + ":" + dst.service_port + "/api/" + dst.name + "' -v", lock)
-        else: # adder or multiplier
-            subprocess_shell_call("kubectl --context " + src.context + " exec -it " + src.pod_id + " -c workflow-" + src.name + " -- curl --user " + src.name + ":password --header 'Content-Type: application/json' --header 'Accept: text/html' -d '{ \"first_number\": 4, \"second_number\": 2 }' 'http://" + dst.service_ip + ":" + dst.service_port + "/api/" + dst.name + "' -v", lock)
-
+        subprocess_shell_call("kubectl --context " + src.context + " exec -it " + src.pod_id + " -c " + src.name + " -- curl --user " + src.name + ":password -X POST --header 'Content-Type: application/json' --header 'Accept: text/html' -d '{ \"document\": \"Contents of the document\", \"document_name\": \"file_name_to_save\" }' 'http://" + dst.service_ip + ":" + dst.service_port + "/api/" + dst.name + "' -v", lock)
 
 # Launches a packet capture, a request and fetches the capture file
 # src, dst and capture_pod are Pod()
