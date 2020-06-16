@@ -116,13 +116,13 @@ class Pod:
             self.name = name
             self.context = context
             assert(self.context != None), "Pod " + name + " has no context."
-            self.pod_id = self.get_pod_id(name)
+            self.pod_id = self.get_pod_id(name, context)
             assert(self.pod_id != ""), "Pod " + name + " does not exist."
-            self.pod_ip = self.get_pod_ip(name)
+            self.pod_ip = self.get_pod_ip(name, context)
             assert(self.pod_ip != ""), "Pod " + name + " has no IP."
-            self.service_ip = self.get_service_ip(name)
+            self.service_ip = self.get_service_ip(name, context)
             assert(self.service_ip != ""), "Pod " + name + " has no service IP."
-            self.service_port = self.get_service_port(name)
+            self.service_port = self.get_service_port(name, context)
             assert(self.service_port != ""), "Pod " + name + " has no service port."
 
     def __repr__(self):
