@@ -260,13 +260,14 @@ data:
 
     # RBAC role-permissions assignments
     role_permissions = {
-        "owner": [{"method": "POST",  "path": "/api/adder"}],
-        "vfx-1": [{"method": "POST",  "path": "/api/adder"}],
-        "vfx-2": [{"method": "POST",  "path": "/api/adder"}],
-        "vfx-3": [{"method": "POST",  "path": "/api/adder"}],
-        "color": [{"method": "POST",  "path": "/api/adder"}],
-        "hdr": [{"method": "POST",  "path": "/api/adder"}],
-        "sound": [{"method": "POST",  "path": "/api/adder"}]
+        "owner": [{"method": "POST",  "path": "/api/vfx-1"}],
+        "vfx-1": [{"method": "POST",  "path": "/api/vfx-2"},
+                  {"method": "POST",  "path": "/api/vfx-3"}],
+        "vfx-2": [{"method": "POST",  "path": "/api/color"}],
+        "vfx-3": [{"method": "POST",  "path": "/api/sound"}],
+        "color": [{"method": "POST",  "path": "/api/hdr"}],
+        "hdr": [{"method": "POST",  "path": "/api/owner"}],
+        "sound": [{"method": "POST",  "path": "/api/owner"}]
     }
 
     # Logic that implements RBAC
@@ -288,4 +289,15 @@ data:
 
       # Match method and path (RBAC)
       rbac_logic
+    }
+
+    allow {
+      user_name == "vfx-3"
+
+      # Match method and path (RBAC)
+      rbac_logic
+
+      current_time := time.clock([time.now_ns(), "Europe/Paris"])
+      to_number(current_time[0]) >= 8
+      to_number(current_time[0]) <= 17
     }
