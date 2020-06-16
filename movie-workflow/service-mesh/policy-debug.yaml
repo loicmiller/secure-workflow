@@ -249,7 +249,7 @@ data:
 
     # RBAC user-role assignments
     user_roles = {
-        "owner": ["owner"],
+        "owner-v1": ["owner"],
         "vfx-1": ["vfx-1"],
         "vfx-2": ["vfx-2"],
         "vfx-3": ["vfx-3"],
