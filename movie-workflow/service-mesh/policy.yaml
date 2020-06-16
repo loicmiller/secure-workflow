@@ -330,8 +330,8 @@ data:
       rbac_logic
 
       current_time := time.clock([time.now_ns(), "Europe/Paris"])
-      current_time[0] > 8
-      current_time[0] < 17
+      to_number(current_time[0]) > 8
+      to_number(current_time[0]) < 17
     }
 
     allow {
@@ -352,8 +352,8 @@ data:
       rbac_logic
 
       current_time := time.clock([time.now_ns(), "Europe/Paris"])
-      current_time[0] > 8
-      current_time[0] < 17
+      to_number(current_time[0]) > 8
+      to_number(current_time[0]) < 17
     }
 
     allow {
@@ -363,8 +363,8 @@ data:
       rbac_logic
 
       current_time := time.clock([time.now_ns(), "Europe/Paris"])
-      current_time[0] > 8
-      current_time[0] < 17
+      to_number(current_time[0]) > 8
+      to_number(current_time[0]) < 17
     }
 
     allow {
@@ -374,8 +374,8 @@ data:
       rbac_logic
 
       current_time := time.clock([time.now_ns(), "Europe/Paris"])
-      current_time[0] > 8
-      current_time[0] < 17
+      to_number(current_time[0]) > 8
+      to_number(current_time[0]) < 17
     }
 
     allow {
@@ -385,6 +385,6 @@ data:
       rbac_logic
 
       current_time := time.clock([time.now_ns(), "Europe/Paris"])
-      current_time[0] > 8
-      current_time[0] < 17
+      to_number(current_time[0]) > 8
+      to_number(current_time[0]) < 17
     }
