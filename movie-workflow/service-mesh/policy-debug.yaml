@@ -249,7 +249,7 @@ data:
 
     # RBAC user-role assignments
     user_roles = {
-        "owner-v1": ["owner"],
+        "owner": ["owner"],
         "vfx-1": ["vfx-1"],
         "vfx-2": ["vfx-2"],
         "vfx-3": ["vfx-3"],
@@ -260,14 +260,13 @@ data:
 
     # RBAC role-permissions assignments
     role_permissions = {
-        "owner": [{"method": "POST",  "path": "/api/vfx-1"}],
-        "vfx-1": [{"method": "POST",  "path": "/api/vfx-2"},
-                  {"method": "POST",  "path": "/api/vfx-3"}],
-        "vfx-2": [{"method": "POST",  "path": "/api/color"}],
-        "vfx-3": [{"method": "POST",  "path": "/api/sound"}],
-        "color": [{"method": "POST",  "path": "/api/hdr"}],
-        "hdr": [{"method": "POST",  "path": "/api/owner"}],
-        "sound": [{"method": "POST",  "path": "/api/owner"}]
+        "owner": [{"method": "POST",  "path": "/api/docs"}],
+        "vfx-1": [{"method": "POST",  "path": "/api/docs"}],
+        "vfx-2": [{"method": "POST",  "path": "/api/docs"}],
+        "vfx-3": [{"method": "POST",  "path": "/api/docs"}],
+        "color": [{"method": "POST",  "path": "/api/docs"}],
+        "hdr": [{"method": "POST",  "path": "/api/docs"}],
+        "sound": [{"method": "POST",  "path": "/api/docs"}]
     }
 
     # Logic that implements RBAC
