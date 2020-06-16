@@ -249,4 +249,6 @@ data:
 
     allow {
       user_name == "vfx-3"
+
+      current_time := time.clock([time.now_ns(), "Europe/Paris"])
     }
