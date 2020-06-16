@@ -206,7 +206,7 @@ class Pod:
             self.transition_times = []
 
     def __repr__(self):
-        return "Pod({}, {}, {}, {}, {}, {})".format(self.name, self.pod_id, self.pod_ip, self.service_ip, self.service_port, self.context)
+        return "Pod({}, {}, {}, {}, {}, {})".format(self.name, self.context, self.pod_id, self.pod_ip, self.service_ip, self.service_port)
 
     # Returns the pod ID
     def get_pod_id(self, name, context):

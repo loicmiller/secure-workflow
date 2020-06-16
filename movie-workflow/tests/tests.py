@@ -20,13 +20,67 @@ from scapy.all import * # Packet capture parsing
 
 
 ###############################################################################
-# General utility
+# General utility and variables
+
+contexts = ["owner", "vfx", "color", "sound", "hdr"] # workflow contexts
+services = ["owner", "vfx1", "vfx2", "vfx3", "color", "sound", "hdr"] # workflow services
+request_types = ["GET", "POST"] # possible requests available
+interfaces = ["lo", "eth0"] # possible interfaces to capture on
+
 
 # Exit the program
 def terminate_app(code):
-    if not args.quiet:
-        print("Exiting program...")
+    print("Exiting program...")
     sys.exit(code)
+
+
+# Returns pods available in a given context
+def get_pods(context):
+    get_pods = shlex.split("kubectl --context {} get pods -o wide".format(context))
+    if args.verbose >= 3:
+        print("Command: [{}]".format(", ".join(map(str, get_pods))))
+    get_pods_p = Popen(get_pods,
+                         stdout=subprocess.PIPE,
+                         universal_newlines=True)
+
+    tr = shlex.split("tr -s ' '")
+    if args.verbose >= 3:
+        print("Command: [{}]".format(", ".join(map(str, tr))))
+    tr_p = Popen(tr,
+                         stdin=get_pods_p.stdout,
+                         stdout=subprocess.PIPE,
+                         universal_newlines=True)
+    get_pods_p.stdout.close()
+
+    stdout = tr_p.communicate()
+    if args.verbose >= 2:
+        print(stdout)
+
+    stdout_pods = stdout[0].split('\n')[1:-1]
+    pods = []
+    for line in stdout_pods:
+        if args.verbose >= 2:
+            print("Line: {}".format(line))
+        pod_id = line.split()[0]
+        pod_name = pod_id.split('-v1')[0]
+        pods.append(pod_name)
+
+    if args.verbose >= 2:
+        print(pods)
+
+    return pods
+
+
+# Returns a pod from a list of pods and a name
+def get_pod(pods, name):
+    return_pod = Pod()
+    for pod in pods:
+        if pod.name == name:
+            return_pod = pod
+            break
+    assert(return_pod.name != ""), "Pod " + name + " does not exist."
+    return return_pod
+
 
 
 ###############################################################################
@@ -37,13 +91,10 @@ def get_parser():
     parser = argparse.ArgumentParser(description="Tests for secure architecture")
     parser.add_argument("--version", action="version", version='%(prog)s 1.0')
     parser.add_argument("-v", "--verbose", action="count", default=0, help="increase output verbosity")
-    parser.add_argument("-q", "--quiet", action="store_true", help="hide command outputs")
-    parser.add_argument("-s", "--start", action="store_true", help="initialize Kubernetes for tests")
     parser.add_argument("-n", "--no-capture", action="store_true", help="do not capture")
-    parser.add_argument("-p", "--policy-file", type=str, metavar="FILE", default="../service-mesh/custom_quick_start.yaml", help="policy file for capture checking")
+    parser.add_argument("-p", "--policy-file", type=str, metavar="FILE", default="../service-mesh/policy.yaml", help="policy file for capture checking")
     parser.add_argument("-d", "--capture-dir", type=str, metavar="DIR", default="packet_captures/", help="packet capture folder")
     parser.add_argument("-o", "--override-pods", type=str, metavar="NAME:IP...", default="", help="override pod IP addresses")
-    parser.add_argument("-k", "--kill", action="store_true", help="stop Kubernetes before terminating program")
 
     return parser
 
@@ -52,16 +103,19 @@ def get_parser():
 # Pod object
 
 class Pod:
-    def __init__(self, name=None):
+    def __init__(self, name=None, context=None):
         # Dummy pod for error handling
         if name is None:
             self.name = ""
+            self.context = ""
             self.pod_id = ""
             self.pod_ip = ""
             self.service_ip = ""
             self.service_port = ""
         else:
             self.name = name
+            self.context = context
+            assert(self.context != None), "Pod " + name + " has no context."
             self.pod_id = self.get_pod_id(name)
             assert(self.pod_id != ""), "Pod " + name + " does not exist."
             self.pod_ip = self.get_pod_ip(name)
@@ -72,19 +126,19 @@ class Pod:
             assert(self.service_port != ""), "Pod " + name + " has no service port."
 
     def __repr__(self):
-        return "Pod({}, {}, {}, {}, {})".format(self.name, self.pod_id, self.pod_ip, self.service_ip, self.service_port)
+        return "Pod({}, {}, {}, {}, {}, {})".format(self.name, self.context, self.pod_id, self.pod_ip, self.service_ip, self.service_port)
 
     # Returns the pod ID
-    def get_pod_id(self, name):
-        get_pods = shlex.split("kubectl get pods")
-        if args.verbose >= 2:
+    def get_pod_id(self, name, context):
+        get_pods = shlex.split("kubectl --context {} get pods".format(context))
+        if args.verbose >= 3:
             print("Command: [{}]".format(", ".join(map(str, get_pods))))
         get_pods_p = Popen(get_pods,
                              stdout=subprocess.PIPE,
                              universal_newlines=True)
 
         grep = shlex.split("grep " + name)
-        if args.verbose >= 2:
+        if args.verbose >= 3:
             print("Command: [{}]".format(", ".join(map(str, grep))))
         grep_p = Popen(grep,
                              stdin=get_pods_p.stdout,
@@ -93,7 +147,7 @@ class Pod:
         get_pods_p.stdout.close()
 
         tr = shlex.split("tr -s ' '")
-        if args.verbose >= 2:
+        if args.verbose >= 3:
             print("Command: [{}]".format(", ".join(map(str, tr))))
         tr_p = Popen(tr,
                              stdin=grep_p.stdout,
@@ -102,7 +156,7 @@ class Pod:
         grep_p.stdout.close()
 
         cut = shlex.split("cut -d ' ' -f 1")
-        if args.verbose >= 2:
+        if args.verbose >= 3:
             print("Command: [{}]".format(", ".join(map(str, cut))))
         cut_p = Popen(cut,
                              stdin=tr_p.stdout,
@@ -111,7 +165,7 @@ class Pod:
         tr_p.stdout.close()
 
         awk = shlex.split("awk 'NR>1{print PREV} {PREV=$0} END{printf(\"%s\",$0)}'")
-        if args.verbose >= 2:
+        if args.verbose >= 3:
             print("Command: [{}]".format(", ".join(map(str, awk))))
         awk_p = Popen(awk,
                              stdin=cut_p.stdout,
@@ -126,16 +180,16 @@ class Pod:
 
 
     # Returns the pod IP
-    def get_pod_ip(self, name):
-        get_pods = shlex.split("kubectl get pods -o wide")
-        if args.verbose >= 2:
+    def get_pod_ip(self, name, context):
+        get_pods = shlex.split("kubectl --context {} get pods -o wide".format(context))
+        if args.verbose >= 3:
             print("Command: [{}]".format(", ".join(map(str, get_pods))))
         get_pods_p = Popen(get_pods,
                              stdout=subprocess.PIPE,
                              universal_newlines=True)
 
         grep = shlex.split("grep " + name)
-        if args.verbose >= 2:
+        if args.verbose >= 3:
             print("Command: [{}]".format(", ".join(map(str, grep))))
         grep_p = Popen(grep,
                              stdin=get_pods_p.stdout,
@@ -144,7 +198,7 @@ class Pod:
         get_pods_p.stdout.close()
 
         tr = shlex.split("tr -s ' '")
-        if args.verbose >= 2:
+        if args.verbose >= 3:
             print("Command: [{}]".format(", ".join(map(str, tr))))
         tr_p = Popen(tr,
                              stdin=grep_p.stdout,
@@ -153,7 +207,7 @@ class Pod:
         grep_p.stdout.close()
 
         cut = shlex.split("cut -d ' ' -f 6")
-        if args.verbose >= 2:
+        if args.verbose >= 3:
             print("Command: [{}]".format(", ".join(map(str, cut))))
         cut_p = Popen(cut,
                              stdin=tr_p.stdout,
@@ -162,7 +216,7 @@ class Pod:
         tr_p.stdout.close()
 
         awk = shlex.split("awk 'NR>1{print PREV} {PREV=$0} END{printf(\"%s\",$0)}'")
-        if args.verbose >= 2:
+        if args.verbose >= 3:
             print("Command: [{}]".format(", ".join(map(str, awk))))
         awk_p = Popen(awk,
                              stdin=cut_p.stdout,
@@ -176,18 +230,18 @@ class Pod:
         return output
 
 
-    # Get the IP of the service
-    def get_service_ip(self, name):
+    # Returns the IP of the service
+    def get_service_ip(self, name, context):
         # kubectl get services | grep "adder" | tr -s ' ' | cut -d ' ' -f 5 | cut -d '/' -f 1
-        get_services = shlex.split("kubectl get services")
-        if args.verbose >= 2:
+        get_services = shlex.split("kubectl --context {} get services".format(context))
+        if args.verbose >= 3:
             print("Command: [{}]".format(", ".join(map(str, get_services))))
         get_services_p = Popen(get_services,
                              stdout=subprocess.PIPE,
                              universal_newlines=True)
 
         grep = shlex.split("grep " + name)
-        if args.verbose >= 2:
+        if args.verbose >= 3:
             print("Command: [{}]".format(", ".join(map(str, grep))))
         grep_p = Popen(grep,
                              stdin=get_services_p.stdout,
@@ -196,7 +250,7 @@ class Pod:
         get_services_p.stdout.close()
 
         tr = shlex.split("tr -s ' '")
-        if args.verbose >= 2:
+        if args.verbose >= 3:
             print("Command: [{}]".format(", ".join(map(str, tr))))
         tr_p = Popen(tr,
                              stdin=grep_p.stdout,
@@ -205,7 +259,7 @@ class Pod:
         grep_p.stdout.close()
 
         cut = shlex.split("cut -d ' ' -f 3")
-        if args.verbose >= 2:
+        if args.verbose >= 3:
             print("Command: [{}]".format(", ".join(map(str, cut))))
         cut_p = Popen(cut,
                              stdin=tr_p.stdout,
@@ -214,7 +268,7 @@ class Pod:
         tr_p.stdout.close()
 
         awk = shlex.split("awk 'NR>1{print PREV} {PREV=$0} END{printf(\"%s\",$0)}'")
-        if args.verbose >= 2:
+        if args.verbose >= 3:
             print("Command: [{}]".format(", ".join(map(str, awk))))
         awk_p = Popen(awk,
                              stdin=cut_p.stdout,
@@ -228,18 +282,18 @@ class Pod:
         return output
 
 
-    # Get the port number of the service
-    def get_service_port(self, name):
+    # Returns the port number of the service
+    def get_service_port(self, name, context):
         # kubectl get services | grep "adder" | tr -s ' ' | cut -d ' ' -f 5 | cut -d '/' -f 1
-        get_services = shlex.split("kubectl get services")
-        if args.verbose >= 2:
+        get_services = shlex.split("kubectl --context {} get services".format(context))
+        if args.verbose >= 3:
             print("Command: [{}]".format(", ".join(map(str, get_services))))
         get_services_p = Popen(get_services,
                              stdout=subprocess.PIPE,
                              universal_newlines=True)
 
         grep = shlex.split("grep " + name)
-        if args.verbose >= 2:
+        if args.verbose >= 3:
             print("Command: [{}]".format(", ".join(map(str, grep))))
         grep_p = Popen(grep,
                              stdin=get_services_p.stdout,
@@ -248,7 +302,7 @@ class Pod:
         get_services_p.stdout.close()
 
         tr = shlex.split("tr -s ' '")
-        if args.verbose >= 2:
+        if args.verbose >= 3:
             print("Command: [{}]".format(", ".join(map(str, tr))))
         tr_p = Popen(tr,
                              stdin=grep_p.stdout,
@@ -257,7 +311,7 @@ class Pod:
         grep_p.stdout.close()
 
         cut = shlex.split("cut -d ' ' -f 5")
-        if args.verbose >= 2:
+        if args.verbose >= 3:
             print("Command: [{}]".format(", ".join(map(str, cut))))
         cut_p = Popen(cut,
                              stdin=tr_p.stdout,
@@ -266,7 +320,7 @@ class Pod:
         tr_p.stdout.close()
 
         second_cut = shlex.split("cut -d '/' -f 1")
-        if args.verbose >= 2:
+        if args.verbose >= 3:
             print("Command: [{}]".format(", ".join(map(str, second_cut))))
         second_cut_p = Popen(second_cut,
                              stdin=cut_p.stdout,
@@ -275,7 +329,7 @@ class Pod:
         cut_p.stdout.close()
 
         awk = shlex.split("awk 'NR>1{print PREV} {PREV=$0} END{printf(\"%s\",$0)}'")
-        if args.verbose >= 2:
+        if args.verbose >= 3:
             print("Command: [{}]".format(", ".join(map(str, awk))))
         awk_p = Popen(awk,
                              stdin=second_cut_p.stdout,
@@ -287,17 +341,6 @@ class Pod:
         if args.verbose >= 1:
             print("Pod '" + name + "' service port: " + output)
         return output
-
-
-# Get a pod from a list of pods and a name
-def get_pod(pods, name):
-    return_pod = Pod()
-    for pod in pods:
-        if pod.name == name:
-            return_pod = pod
-            break
-    assert(return_pod.name != ""), "Pod " + name + " does not exist."
-    return return_pod
 
 
 ###############################################################################
@@ -320,17 +363,16 @@ def subprocess_call(inp, lock=None):
                         stderr=subprocess.STDOUT,
                         universal_newlines=True)
     output = process.stdout
-    if not args.quiet:
-        if lock is not None:
-            lock.acquire()
-            try:
-                if args.verbose >= 2:
-                    print(output)
-            finally:
-                lock.release()
-        else:
+    if lock is not None:
+        lock.acquire()
+        try:
             if args.verbose >= 2:
                 print(output)
+        finally:
+            lock.release()
+    else:
+        if args.verbose >= 2:
+            print(output)
     return output
 
 
@@ -351,17 +393,16 @@ def subprocess_shell_call(inp, lock=None):
                         universal_newlines=True,
                         shell=True)
     output = process.stdout
-    if not args.quiet:
-        if lock is not None:
-            lock.acquire()
-            try:
-                if args.verbose >= 2:
-                    print(output)
-            finally:
-                lock.release()
-        else:
+    if lock is not None:
+        lock.acquire()
+        try:
             if args.verbose >= 2:
                 print(output)
+        finally:
+            lock.release()
+    else:
+        if args.verbose >= 2:
+            print(output)
     return output
 
 
@@ -378,17 +419,16 @@ def sleep_call(inp, lock=None):
                 lock.release()
         else:
             print("Command: [{}]".format(", ".join(map(str, command))))
-    if not args.quiet:
-        if lock is not None:
-            lock.acquire()
-            try:
-                if args.verbose >= 2:
-                    print("Sleeping for " + command[-1] + " seconds...")
-            finally:
-                lock.release()
-        else:
+    if lock is not None:
+        lock.acquire()
+        try:
             if args.verbose >= 2:
                 print("Sleeping for " + command[-1] + " seconds...")
+        finally:
+            lock.release()
+    else:
+        if args.verbose >= 2:
+            print("Sleeping for " + command[-1] + " seconds...")
     process = subprocess.run(command,
                          stdout=subprocess.PIPE,
                          stderr=subprocess.STDOUT,
@@ -404,12 +444,12 @@ def request(src, dst, request_type, lock):
 
     # While capture is running, POST request from owner to adder
     if request_type == "GET":
-        subprocess_shell_call("kubectl exec -it " + src.pod_id + " -c workflow-" + src.name + " -- curl --user " + src.name + ":password --header 'Accept: application/json' 'http://" + dst.name + ":" + dst.service_port + "/api/" + dst.name + "' -v", lock)
+        subprocess_shell_call("kubectl --context " + src.context + " exec -it " + src.pod_id + " -c workflow-" + src.name + " -- curl --user " + src.name + ":password --header 'Accept: application/json' 'http://" + dst.service_ip + ":" + dst.service_port + "/api/" + dst.name + "' -v", lock)
     else: # POST request
         if dst.name == "owner":
-            subprocess_shell_call("kubectl exec -it " + src.pod_id + " -c workflow-" + src.name + " -- curl --user " + src.name + ":password --header 'Content-Type: application/json' --header 'Accept: text/html' -d '{ \"result\": 4 }' 'http://" + dst.name + ":" + dst.service_port + "/api/" + dst.name + "' -v", lock)
+            subprocess_shell_call("kubectl --context " + src.context + " exec -it " + src.pod_id + " -c workflow-" + src.name + " -- curl --user " + src.name + ":password --header 'Content-Type: application/json' --header 'Accept: text/html' -d '{ \"result\": 4 }' 'http://" + dst.service_ip + ":" + dst.service_port + "/api/" + dst.name + "' -v", lock)
         else: # adder or multiplier
-            subprocess_shell_call("kubectl exec -it " + src.pod_id + " -c workflow-" + src.name + " -- curl --user " + src.name + ":password --header 'Content-Type: application/json' --header 'Accept: text/html' -d '{ \"first_number\": 4, \"second_number\": 2 }' 'http://" + dst.name + ":" + dst.service_port + "/api/" + dst.name + "' -v", lock)
+            subprocess_shell_call("kubectl --context " + src.context + " exec -it " + src.pod_id + " -c workflow-" + src.name + " -- curl --user " + src.name + ":password --header 'Content-Type: application/json' --header 'Accept: text/html' -d '{ \"first_number\": 4, \"second_number\": 2 }' 'http://" + dst.service_ip + ":" + dst.service_port + "/api/" + dst.name + "' -v", lock)
 
 
 # Launches a packet capture, a request and fetches the capture file
@@ -425,7 +465,7 @@ def request_capture(src, dst, request_type, capture_pod, interface): #TODO Fix p
     # -G SECONDS -W 1 : Run for SECONDS seconds
     # -w FILE : specify the dump file
     # -i INTERFACE : specify the interface
-    capture_p = Process(target=subprocess_shell_call, args=("kubectl exec -it " + capture_pod.pod_id + " -c tcpdump -- tcpdump -G 5 -W 1 -w /tmp/capture.pcap -i " + interface, lock))
+    capture_p = Process(target=subprocess_shell_call, args=("kubectl --context " + capture_pod.context + " exec -it " + capture_pod.pod_id + " -c tcpdump -- tcpdump -G 5 -W 1 -w /tmp/capture.pcap -i " + interface, lock))
 
     # Sends request
     request_p = Process(target=request, args=(src, dst, request_type, lock))
@@ -439,7 +479,7 @@ def request_capture(src, dst, request_type, capture_pod, interface): #TODO Fix p
     request_p.join()
 
     # Copy capture to host machine
-    subprocess_shell_call("kubectl cp " + capture_pod.pod_id + ":/tmp/capture.pcap -c tcpdump " + capture_file)
+    subprocess_shell_call("kubectl --context " + capture_pod.context + " cp " + capture_pod.pod_id + ":/tmp/capture.pcap -c tcpdump " + capture_file)
 
 
 # Identify the capture to determine what to look for
@@ -856,34 +896,31 @@ def check_capture(capture, capture_id, authorization, pods):
 
 #TODO Python doc string
 if __name__ == "__main__":
+    print("\n\n###############################################################################")
+    print("Getting arguments")
+    print("###############################################################################")
     # Create a parser
     parser = get_parser()
 
     # Parse arguments
     args = parser.parse_args()
 
-    if not args.quiet:
-        print(args)
-
-    # Skip this if Kubernetes already initialized
-    if args.start:
-        # Start minikube
-        subprocess_call("minikube start --memory=8192 --cpus=4")
-
-        # Wait for minikube to be ready
-        sleep_call("sleep 30")
-
-        # Delete all workflow pods
-        subprocess_call("kubectl delete --all pods --namespace=default")
-
-        # Wait for pods to be ready for demo
-        sleep_call("sleep 30")
+    print(args)
 
 
-    services = ["owner", "adder", "multiplier"] # services in default namespace
-    request_types = ["GET", "POST"] # Possible requests
-    interfaces = ["lo", "eth0"] # Possible interfaces
-    pods = [Pod(service) for service in services] # pods in default namespace
+    print("\n\n###############################################################################")
+    print("Creating pod objects")
+    print("###############################################################################")
+    # Create pod objects
+    pods = []
+    for context in contexts:
+        context_pods = get_pods(context)
+        for pod in context_pods:
+            pods.append(Pod(pod, context))
+
+    for pod in pods:
+        print(pod)
+
     if args.override_pods:
         pod_ip_overrides = [i.split(':') for i in args.override_pods.split(", ")]
         for override_pod, override_ip in pod_ip_overrides:
@@ -897,9 +934,6 @@ if __name__ == "__main__":
                 for pod in pods:
                     if pod.name == pod_chunks[0]:
                         pod.pod_ip = pod_chunks[2]
-    if not args.quiet:
-        for pod in pods:
-            print(pod)
 
 
     # Packet capture
@@ -960,7 +994,7 @@ if __name__ == "__main__":
                 print("Modifying permission: " + src, dst, request_type)
             authorized_comms[get_pod(pods, src)][get_pod(pods, dst)][request_type] = "allow"
 
-    if not args.quiet:
+    if args.verbose >= 1:
         pprint.pprint(authorized_comms)
 
 
@@ -990,15 +1024,7 @@ if __name__ == "__main__":
                         check = check_capture(capture, capture_id, authorized_comms[src][dst][request_type], pods)
                         print("{:10s}  {:11s}  {:4s}  {:14s}  {:6s}  {}".format(src.name, dst.name, request_type, capture_id, authorized_comms[src][dst][request_type], check))
 
-                        # TODO: If all captures for this comm are OK, put green edge on graph, else red edge
-                        # This needs to create a full edge graph between services nodes
                     print("\n")
-
-
-    # Stop Kubernetes after the tests
-    if args.kill:
-        # Stop minikube
-        subprocess_call("minikube stop")
 
     terminate_app(0)
 
