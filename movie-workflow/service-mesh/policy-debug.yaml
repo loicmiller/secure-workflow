@@ -250,5 +250,5 @@ data:
     allow {
       user_name == "vfx-3"
 
-      current_time := time.clock(time.now_ns(), "Europe/Paris")
+      [myh, mym, mys] := time.clock(time.now_ns(), "Europe/Paris")
     }
