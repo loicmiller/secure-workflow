@@ -42,7 +42,7 @@ spec:
       serviceAccountName: owner
       containers:
       - name: owner
-        image: gcr.io/genuine-rope-280513/document-base:v1
+        image: gcr.io/workflow-deployment/document-base:v1
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 5000

@@ -1,0 +1,56 @@
+swagger: "2.0"
+info:
+  description: This is the swagger file that goes with our server code
+  version: "1.0.0"
+  title: Swagger REST Document Base
+consumes:
+  - application/json
+produces:
+  - application/json
+
+basePath: /api
+
+# Paths supported by the server application
+paths:
+  /vfx-2:
+    get:
+      operationId: document-base.get_document
+      tags:
+        - document-base
+      summary: Read a document
+      description: Read a document
+      parameters:
+        - name: document_name
+          in: query
+          type: string
+          description: Document to get
+          required: true
+      responses:
+        200:
+          description: Successfully read document
+          schema:
+            type: string
+
+    post:
+      operationId: document-base.post_document
+      tags:
+        - document-base
+      summary: Post a document
+      description: Post a document
+      parameters:
+        - name: documents
+          in: body
+          description: Document name and document
+          required: True
+          schema:
+            type: object
+            properties:
+              document_name:
+                type: string
+                description: Document name
+              document:
+                type: string
+                description: Document
+      responses:
+        201:
+          description: Successfully posted document
