@@ -959,6 +959,8 @@ if __name__ == "__main__":
                                 request_capture(src, dst, request_type, capture_pod, interface)
 
 
+    terminate_app(0)
+
     print("\n\n###############################################################################")
     print("Constructing AC matrix")
     print("###############################################################################")
