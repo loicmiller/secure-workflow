@@ -260,13 +260,13 @@ data:
 
     # RBAC role-permissions assignments
     role_permissions = {
-        "owner": [{"method": "POST",  "path": "/api/docs"}],
-        "vfx-1": [{"method": "POST",  "path": "/api/docs"}],
-        "vfx-2": [{"method": "POST",  "path": "/api/docs"}],
-        "vfx-3": [{"method": "POST",  "path": "/api/docs"}],
-        "color": [{"method": "POST",  "path": "/api/docs"}],
-        "hdr": [{"method": "POST",  "path": "/api/docs"}],
-        "sound": [{"method": "POST",  "path": "/api/docs"}]
+        "owner": [{"method": "POST",  "path": "/api/adder"}],
+        "vfx-1": [{"method": "POST",  "path": "/api/adder"}],
+        "vfx-2": [{"method": "POST",  "path": "/api/adder"}],
+        "vfx-3": [{"method": "POST",  "path": "/api/adder"}],
+        "color": [{"method": "POST",  "path": "/api/adder"}],
+        "hdr": [{"method": "POST",  "path": "/api/adder"}],
+        "sound": [{"method": "POST",  "path": "/api/adder"}]
     }
 
     # Logic that implements RBAC
