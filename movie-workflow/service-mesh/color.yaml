@@ -42,7 +42,7 @@ spec:
       serviceAccountName: color
       containers:
       - name: color
-        image: gcr.io/workflow-deployment/document-base:v1
+        image: gcr.io/workflow-deployment/document-base-color:v1
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 5000

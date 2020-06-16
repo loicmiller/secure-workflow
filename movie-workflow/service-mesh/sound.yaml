@@ -43,7 +43,7 @@ spec:
       volumes:
       containers:
       - name: sound
-        image: gcr.io/workflow-deployment/document-base:v1
+        image: gcr.io/workflow-deployment/document-base-sound:v1
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 5000
