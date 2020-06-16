@@ -932,6 +932,14 @@ if __name__ == "__main__":
                         pod.pod_ip = pod_chunks[2]
 
 
+    print("\n\n###############################################################################")
+    print("Capturing requests")
+    print("###############################################################################")
+    # Create capture dir
+    if not os.path.exists(args.capture_dir):
+        os.makedirs(args.capture_dir)
+        print("Created {}".format(args.capture_dir))
+
     # Packet capture
     if not args.no_capture:
         # Capture metadata file
@@ -951,6 +959,9 @@ if __name__ == "__main__":
                                 request_capture(src, dst, request_type, capture_pod, interface)
 
 
+    print("\n\n###############################################################################")
+    print("Constructing AC matrix")
+    print("###############################################################################")
     # Fetch policy from YAML configuration file and store it in policy
     with open(args.policy_file) as policy_file:
         # Isolate the opa-policy section
@@ -994,6 +1005,9 @@ if __name__ == "__main__":
         pprint.pprint(authorized_comms)
 
 
+    print("\n\n###############################################################################")
+    print("Checking captures with AC matrix")
+    print("###############################################################################")
     # Check capture files to confirm or infirm policy is enforced
     # For each possible communication in authorized_comms
     for communication in authorized_comms:
