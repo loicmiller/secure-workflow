@@ -42,7 +42,7 @@ spec:
       serviceAccountName: hdr
       containers:
       - name: hdr
-        image: gcr.io/wfs-no-opa/document-base:v1
+        image: gcr.io/genuine-rope-280513/document-base:v1
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 5000
