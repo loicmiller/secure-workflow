@@ -93,8 +93,8 @@ def get_pod(pods, name):
 
 
 def get_request_time(src, dst):
-    with open(args.curl_format, 'r') as curl_file_format:
-        curl_format = curl_file_format.readlines()
+    with open(args.curl_format, 'r') as curl_format_file:
+        curl_format = curl_format_file.read()
         if args.verbose >= 1:
             print("curl format: {}".format(curl_format))
 
