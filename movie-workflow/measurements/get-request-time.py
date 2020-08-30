@@ -121,7 +121,10 @@ def get_request_time(src, dst):
     if args.verbose >= 3:
         print("Command output: {}".format(command_output))
 
-    time_namelookup, time_connect, time_appconnect, time_pretransfer, time_redirect, time_starttransfer, time_total = command_output.split()
+    try:
+        time_namelookup, time_connect, time_appconnect, time_pretransfer, time_redirect, time_starttransfer, time_total = command_output.split()
+    except:
+        print("Error while gathering request times")
 
     src.request_times.append((src.name, dst.name, time_namelookup, time_connect, time_appconnect, time_pretransfer, time_redirect, time_starttransfer, time_total))
 
