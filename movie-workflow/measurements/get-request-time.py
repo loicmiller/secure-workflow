@@ -428,7 +428,7 @@ if __name__ == "__main__":
         for src in pods:
             for dst in pods:
                 if src != dst:
-                    print("\n############################## Src {} to Dst {} ##############################".format(pod.name))
+                    print("\n############################## Src {} to Dst {} ##############################".format(src.name, dst.name))
                     last_pod_tuple = get_request_time(src, dst)
                     with open(args.output_file, 'a+') as f:
                         f.write(str(last_pod_tuple) + "\n")
