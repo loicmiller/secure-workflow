@@ -93,7 +93,7 @@ def get_pod(pods, name):
 
 
 def get_request_time(src, dst):
-    get_pod = shlex.split("kubectl --context {} exec -it {} -c {} -- curl -w \"{}\" -s -o /dev/null --user {}:password -X POST --header 'Content-Type: application/json' --header 'Accept: text/html' -d '{{ \"document\": \"Contents of the document\", \"document_name\": \"file_name_to_save\" }}' http://{}:{}/api/{}".format(src.context, src.pod_id, src.name, args.curl_format, src.name, dst.service_ip, dst.service_port, dst.name))
+    get_pod = shlex.split("kubectl --context {} exec -it {} -c {} -- curl -w '{}' -s -o /dev/null --user {}:password -X POST --header 'Content-Type: application/json' --header 'Accept: text/html' -d '{{ \"document\": \"Contents of the document\", \"document_name\": \"file_name_to_save\" }}' http://{}:{}/api/{}".format(src.context, src.pod_id, src.name, args.curl_format, src.name, dst.service_ip, dst.service_port, dst.name))
     if args.verbose >= 3:
         print("Command: [{}]".format(", ".join(map(str, get_pod))))
     get_pod_p = Popen(get_pod,
