@@ -93,7 +93,7 @@ def get_pod(pods, name):
 
 
 def get_request_time(src, dst):
-    get_pod = shlex.split("kubectl --context {} exec -it {} -c {} -- curl -w \"@curl-request-time-format.txt\" -s -o /dev/null --user {}:password -X POST --header 'Content-Type: application/json' --header 'Accept: text/html' -d '{{ \"document\": \"Contents of the document\", \"document_name\": \"file_name_to_save\" }}' http://{}:{}/api/{} -v".format(src.context, src.pod_id, src.name, src.name, dst.service_ip, dst.service_port, dst.name))
+    get_pod = shlex.split("kubectl --context {} exec -it {} -c {} -- curl -w \"{}\" -s -o /dev/null --user {}:password -X POST --header 'Content-Type: application/json' --header 'Accept: text/html' -d '{{ \"document\": \"Contents of the document\", \"document_name\": \"file_name_to_save\" }}' http://{}:{}/api/{}".format(src.context, src.pod_id, src.name, src.name, args.curl_format, dst.service_ip, dst.service_port, dst.name))
     if args.verbose >= 3:
         print("Command: [{}]".format(", ".join(map(str, get_pod))))
     get_pod_p = Popen(get_pod,
@@ -137,6 +137,7 @@ def get_parser():
     parser = argparse.ArgumentParser(description="Measures for secure architecture")
     parser.add_argument("--version", action="version", version='%(prog)s 1.0')
     parser.add_argument("-v", "--verbose", action="count", default=0, help="increase output verbosity")
+    parser.add_argument("-f", "--curl-format", type=str, metavar="FILE", default="secure-workflow/movie-workflow/measurements/curl-request-time-format.txt", help="file to store measurements")
     parser.add_argument("-o", "--output-file", type=str, metavar="FILE", default="request-times.dat", help="file to store measurements")
 
     return parser
