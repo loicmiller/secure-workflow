@@ -114,7 +114,7 @@ def get_request_time(src, dst):
 
     command_output = stdout[0]
     if args.verbose >= 3:
-        print(command_output)
+        print("Command output: {}".format(command_output))
 
     time_namelookup, time_connect, time_appconnect, time_pretransfer, time_redirect, time_starttransfer, time_total = command_output.split()
 
@@ -429,7 +429,7 @@ if __name__ == "__main__":
         for src in pods:
             for dst in pods:
                 if src != dst:
-                    print("\n############################## Src {} to Dst {} ##############################".format(src.name, dst.name))
+                    print("\n################################## {} to {} ##################################".format(src.name, dst.name))
                     last_pod_tuple = get_request_time(src, dst)
                     with open(args.output_file, 'a+') as f:
                         f.write(str(last_pod_tuple) + "\n")
