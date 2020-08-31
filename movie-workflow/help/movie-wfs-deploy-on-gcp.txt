@@ -1,0 +1,463 @@
+# Resources
+***
+- [Building a multi-cluster service mesh on GKE with shared control-plane, single-VPC architecture](https://cloud.google.com/solutions/building-multi-cluster-service-mesh-across-gke-clusters-using-istio-single-control-plane-architecture-single-vpc)
+- [opa-istio-plugin](https://github.com/open-policy-agent/opa-istio-plugin)
+- [Deploying a containerized web application](https://cloud.google.com/kubernetes-engine/docs/tutorials/hello-app)
+
+
+
+# Before you begin
+***
+1. Create Cloud project
+2. Make sure billing is enabled 
+3. Enable GKE and Cloud Resources APIs
+
+
+
+# Setting up your environment
+***
+1. In Google Cloud Console, open Cloud Shell
+
+
+2. Download required files
+
+cd $HOME
+git clone https://github.com/GoogleCloudPlatform/istio-multicluster-gke.git
+
+
+3. Make the repository folder your $WORKDIR folder from which you do all the tasks
+
+cd $HOME/istio-multicluster-gke
+WORKDIR=$(pwd)
+
+
+4. Install kubectx/kubens
+
+git clone https://github.com/ahmetb/kubectx $WORKDIR/kubectx
+export PATH=$PATH:$WORKDIR/kubectx
+
+
+
+# Creating GKE clusters
+***
+Here, we create five clusters (one for each actor of the workflow) in the default VPC with alias IP addresses, enabled.
+With alias IP ranges, GKE clusters can allocate IP addresses from a CIDR block known to Google Cloud.
+This configuration results in Pod IP addresses being natively routable within the VPC, which lets Pods in different clusters have direct IP address connectivity.
+
+1. In Cloud Shell, create five GKE clusters, "owner", "vfx", "color", "sound" and "hdr".
+The "owner" is the control cluster, and the others are remote clusters.
+Each cluster has one node, except the "vfx" cluster which has two nodes
+
+gcloud container clusters create owner --zone us-central1-f --username "admin" \
+    --machine-type "n1-standard-2" --image-type "COS" --disk-size "100" \
+    --scopes "https://www.googleapis.com/auth/compute","https://www.googleapis.com/auth/devstorage.read_only",\
+https://www.googleapis.com/auth/logging.write,"https://www.googleapis.com/auth/monitoring",\
+https://www.googleapis.com/auth/servicecontrol,"https://www.googleapis.com/auth/service.management.readonly",\
+https://www.googleapis.com/auth/trace.append \
+    --num-nodes "2" --network "default" --enable-stackdriver-kubernetes --enable-ip-alias --async
+
+gcloud container clusters create vfx --zone us-central1-f --username "admin" \
+    --machine-type "n1-standard-2" --image-type "COS" --disk-size "100" \
+    --scopes "https://www.googleapis.com/auth/compute","https://www.googleapis.com/auth/devstorage.read_only",\
+https://www.googleapis.com/auth/logging.write,"https://www.googleapis.com/auth/monitoring",\
+https://www.googleapis.com/auth/servicecontrol,"https://www.googleapis.com/auth/service.management.readonly",\
+https://www.googleapis.com/auth/trace.append \
+    --num-nodes "1" --network "default" --enable-stackdriver-kubernetes --enable-ip-alias
+
+gcloud container clusters create color --zone us-central1-f --username "admin" \
+    --machine-type "n1-standard-2" --image-type "COS" --disk-size "100" \
+    --scopes "https://www.googleapis.com/auth/compute","https://www.googleapis.com/auth/devstorage.read_only",\
+https://www.googleapis.com/auth/logging.write,"https://www.googleapis.com/auth/monitoring",\
+https://www.googleapis.com/auth/servicecontrol,"https://www.googleapis.com/auth/service.management.readonly",\
+https://www.googleapis.com/auth/trace.append \
+    --num-nodes "1" --network "default" --enable-stackdriver-kubernetes --enable-ip-alias
+
+gcloud container clusters create sound --zone us-west2-b --username "admin" \
+    --machine-type "n1-standard-2" --image-type "COS" --disk-size "100" \
+    --scopes "https://www.googleapis.com/auth/compute","https://www.googleapis.com/auth/devstorage.read_only",\
+https://www.googleapis.com/auth/logging.write,"https://www.googleapis.com/auth/monitoring",\
+https://www.googleapis.com/auth/servicecontrol,"https://www.googleapis.com/auth/service.management.readonly",\
+https://www.googleapis.com/auth/trace.append \
+    --num-nodes "1" --network "default" --enable-stackdriver-kubernetes --enable-ip-alias
+
+gcloud container clusters create hdr --zone us-west2-b --username "admin" \
+    --machine-type "n1-standard-2" --image-type "COS" --disk-size "100" \
+    --scopes "https://www.googleapis.com/auth/compute","https://www.googleapis.com/auth/devstorage.read_only",\
+https://www.googleapis.com/auth/logging.write,"https://www.googleapis.com/auth/monitoring",\
+https://www.googleapis.com/auth/servicecontrol,"https://www.googleapis.com/auth/service.management.readonly",\
+https://www.googleapis.com/auth/trace.append \
+    --num-nodes "1" --network "default" --enable-stackdriver-kubernetes --enable-ip-alias
+
+
+2. Verify status for each cluster is RUNNING
+
+gcloud container clusters list
+
+Output:
+NAME   LOCATION       MASTER_VERSION  MASTER_IP      MACHINE_TYPE   NODE_VERSION    NUM_NODES  STATUS
+color  us-central1-f  1.14.10-gke.36  35.192.123.25  n1-standard-2  1.14.10-gke.36  1          RUNNING
+owner  us-central1-f  1.14.10-gke.36  35.192.82.167  n1-standard-2  1.14.10-gke.36  2          RUNNING
+vfx    us-central1-f  1.14.10-gke.36  34.71.195.88   n1-standard-2  1.14.10-gke.36  1          RUNNING
+hdr    us-west2-b     1.14.10-gke.36  35.236.38.183  n1-standard-2  1.14.10-gke.36  1          RUNNING
+sound  us-west2-b     1.14.10-gke.36  35.236.80.101  n1-standard-2  1.14.10-gke.36  1          RUNNING
+
+
+3. Set the KUBECONFIG variable to use a new kubeconfig file
+
+touch istiokubecfg
+export KUBECONFIG=istiokubecfg
+
+
+4. Connect to all clusters to generate entries in the kubeconfig file
+
+export PROJECT_ID=$(gcloud info --format='value(config.project)')
+gcloud container clusters get-credentials owner --zone us-central1-f --project ${PROJECT_ID}
+gcloud container clusters get-credentials vfx --zone us-central1-f --project ${PROJECT_ID}
+gcloud container clusters get-credentials color --zone us-central1-f --project ${PROJECT_ID}
+gcloud container clusters get-credentials sound --zone us-west2-b --project ${PROJECT_ID}
+gcloud container clusters get-credentials hdr --zone us-west2-b --project ${PROJECT_ID}
+
+
+A kubeconfig file is used for authentication to clusters.
+After you create the kubeconfig file, you can quickly switch context between clusters.
+
+
+5. Use kubectx to rename the context names for convenience
+
+kubectx owner=gke_${PROJECT_ID}_us-central1-f_owner
+kubectx vfx=gke_${PROJECT_ID}_us-central1-f_vfx
+kubectx color=gke_${PROJECT_ID}_us-central1-f_color
+kubectx sound=gke_${PROJECT_ID}_us-west2-b_sound
+kubectx hdr=gke_${PROJECT_ID}_us-west2-b_hdr
+
+
+6. Give yourself (your Google user) the cluster-admin role for all clusters
+
+kubectl create clusterrolebinding user-admin-binding \
+    --clusterrole=cluster-admin --user=$(gcloud config get-value account) \
+    --context owner
+kubectl create clusterrolebinding user-admin-binding \
+    --clusterrole=cluster-admin --user=$(gcloud config get-value account) \
+    --context vfx
+kubectl create clusterrolebinding user-admin-binding \
+    --clusterrole=cluster-admin --user=$(gcloud config get-value account) \
+    --context color
+kubectl create clusterrolebinding user-admin-binding \
+    --clusterrole=cluster-admin --user=$(gcloud config get-value account) \
+    --context sound
+kubectl create clusterrolebinding user-admin-binding \
+    --clusterrole=cluster-admin --user=$(gcloud config get-value account) \
+    --context hdr
+
+
+
+# Configuring networking
+***
+In this section, we configure VPC routes to let Pods in all clusters have direct IP address connectivity.
+When you enable alias IP ranges for GKE clusters, two secondary subnets are created for each cluster.
+The primary subnet is used for Node IP addresses, and the two secondary subnets are used for Pod CIDR and Service IP addresses.
+
+1. Inspect secondary IP addresses for all clusters
+
+gcloud compute networks subnets describe default --region=us-central1 --format=json | jq '.secondaryIpRanges[]'
+gcloud compute networks subnets describe default --region=us-west2 --format=json | jq '.secondaryIpRanges[]'
+
+
+2. Store the clusters'Pod IP range in variables for later use
+
+OWNER_POD_CIDR=$(gcloud container clusters describe owner --zone us-central1-f --format=json | jq -r '.clusterIpv4Cidr')
+VFX_POD_CIDR=$(gcloud container clusters describe vfx --zone us-central1-f --format=json | jq -r '.clusterIpv4Cidr')
+COLOR_POD_CIDR=$(gcloud container clusters describe color --zone us-central1-f --format=json | jq -r '.clusterIpv4Cidr')
+SOUND_POD_CIDR=$(gcloud container clusters describe sound --zone us-west2-b --format=json | jq -r '.clusterIpv4Cidr')
+HDR_POD_CIDR=$(gcloud container clusters describe hdr --zone us-west2-b --format=json | jq -r '.clusterIpv4Cidr')
+
+
+3. Create a list variable for all Pod CIDR ranges
+
+ALL_CLUSTER_CIDRS=$OWNER_POD_CIDR,$VFX_POD_CIDR,$COLOR_POD_CIDR,$SOUND_POD_CIDR,$HDR_POD_CIDR
+
+You need all the nodes to be able to communicate with each other and with the Pod CIDR ranges.
+
+
+4. Store the network tags for the cluster nodes in a variable
+
+ALL_CLUSTER_NETTAGS=$(gcloud compute instances list --format=json | jq -r '.[].tags.items[0]' | uniq | awk -vORS=, '{ print $1 }' | sed 's/,$/\n/')
+
+You use these network tags later in firewall rules.
+
+
+5. Create a firewall rule that allows traffic between the clusters' Pod CIDR ranges and nodes:
+
+gcloud compute firewall-rules create istio-multicluster-pods \
+    --allow=tcp,udp,icmp,esp,ah,sctp \
+    --direction=INGRESS \
+    --priority=900 \
+    --source-ranges="${ALL_CLUSTER_CIDRS}" \
+    --target-tags="${ALL_CLUSTER_NETTAGS}" --quiet
+
+
+
+# Installing Istio on all GKE clusters
+***
+1. In Cloud Shell, download Istio
+
+export ISTIO_VERSION=1.4.1
+wget https://github.com/istio/istio/releases/download/${ISTIO_VERSION}/istio-${ISTIO_VERSION}-linux.tar.gz
+tar -xzf istio-${ISTIO_VERSION}-linux.tar.gz
+rm -r istio-${ISTIO_VERSION}-linux.tar.gz
+
+In production, we recommend that you hard-code a version of the app (that is, use the version number of a known and tested version) to ensure consistent behavior.
+
+
+2. Install the Istio control plane on the owner cluster
+
+./istio-${ISTIO_VERSION}/bin/istioctl --context owner manifest apply \
+    --set values.prometheus.enabled=true \
+    --set values.grafana.enabled=true \
+    --set values.kiali.enabled=true \
+    --set values.kiali.createDemoSecret=true
+
+
+3. Verify that all Istio deployments are running
+
+kubectl --context owner get pods -n istio-system
+
+
+4. Before you install Istio on the remote clusters, you need to get the Pilot Pod IP address and the Policy and Telemetry Pod IP addresses from the control cluster.
+   These IP addresses are configured in the remote clusters, which connect back to a shared Istio control plane.
+
+export PILOT_POD_IP=$(kubectl --context owner -n istio-system get pod -l istio=pilot -o jsonpath='{.items[0].status.podIP}')
+export POLICY_POD_IP=$(kubectl --context owner -n istio-system get pod -l istio=mixer -o jsonpath='{.items[0].status.podIP}')
+export TELEMETRY_POD_IP=$(kubectl --context owner -n istio-system get pod -l istio-mixer-type=telemetry -o jsonpath='{.items[0].status.podIP}')
+
+
+5. Install Istio on the remote clusters
+
+./istio-${ISTIO_VERSION}/bin/istioctl --context vfx manifest apply \
+    --set profile=remote \
+    --set values.global.controlPlaneSecurityEnabled=false \
+    --set values.global.remotePilotCreateSvcEndpoint=true \
+    --set values.global.remotePilotAddress=${PILOT_POD_IP} \
+    --set values.global.remotePolicyAddress=${POLICY_POD_IP} \
+    --set values.global.remoteTelemetryAddress=${TELEMETRY_POD_IP} \
+    --set gateways.enabled=false \
+    --set autoInjection.enabled=true
+
+./istio-${ISTIO_VERSION}/bin/istioctl --context color manifest apply \
+    --set profile=remote \
+    --set values.global.controlPlaneSecurityEnabled=false \
+    --set values.global.remotePilotCreateSvcEndpoint=true \
+    --set values.global.remotePilotAddress=${PILOT_POD_IP} \
+    --set values.global.remotePolicyAddress=${POLICY_POD_IP} \
+    --set values.global.remoteTelemetryAddress=${TELEMETRY_POD_IP} \
+    --set gateways.enabled=false \
+    --set autoInjection.enabled=true
+
+./istio-${ISTIO_VERSION}/bin/istioctl --context sound manifest apply \
+    --set profile=remote \
+    --set values.global.controlPlaneSecurityEnabled=false \
+    --set values.global.remotePilotCreateSvcEndpoint=true \
+    --set values.global.remotePilotAddress=${PILOT_POD_IP} \
+    --set values.global.remotePolicyAddress=${POLICY_POD_IP} \
+    --set values.global.remoteTelemetryAddress=${TELEMETRY_POD_IP} \
+    --set gateways.enabled=false \
+    --set autoInjection.enabled=true
+
+./istio-${ISTIO_VERSION}/bin/istioctl --context hdr manifest apply \
+    --set profile=remote \
+    --set values.global.controlPlaneSecurityEnabled=false \
+    --set values.global.remotePilotCreateSvcEndpoint=true \
+    --set values.global.remotePilotAddress=${PILOT_POD_IP} \
+    --set values.global.remotePolicyAddress=${POLICY_POD_IP} \
+    --set values.global.remoteTelemetryAddress=${TELEMETRY_POD_IP} \
+    --set gateways.enabled=false \
+    --set autoInjection.enabled=true
+
+
+6. Inspect the Istio deployment in the remote clusters
+
+kubectl --context vfx -n istio-system get pods
+kubectl --context color -n istio-system get pods
+kubectl --context sound -n istio-system get pods
+kubectl --context hdr -n istio-system get pods
+
+
+In the next steps, you configure the control cluster with permissions to access resources in the remote cluster.
+
+The Istio control plane requires access to all clusters in the mesh to discover Services, endpoints, and Pod attributes.
+To gain this access, you create a kubeconfig file for the remote cluster added as a secret in the control cluster.
+
+The istio-remote Helm chart creates a Kubernetes service account named istio-multi in the remote cluster with the minimal required Role-Based Access Control (RBAC) access.
+The following steps generate the remote cluster's kubeconfig file using the credentials of the istio-multi service account.
+
+For each remote cluster:
+
+7. Export the values needed to generate a kubeconfig file
+
+kubectx vfx
+CLUSTER_NAME=$(kubectl config view --minify=true -o "jsonpath={.clusters[].name}")
+CLUSTER_NAME="${CLUSTER_NAME##*_}"
+export KUBECFG_FILE=${WORKDIR}/${CLUSTER_NAME}
+SERVER=$(kubectl config view --minify=true -o "jsonpath={.clusters[].cluster.server}")
+NAMESPACE=istio-system
+SERVICE_ACCOUNT=istio-reader-service-account
+SECRET_NAME=$(kubectl get sa ${SERVICE_ACCOUNT} -n ${NAMESPACE} -o jsonpath='{.secrets[].name}')
+CA_DATA=$(kubectl get secret ${SECRET_NAME} -n ${NAMESPACE} -o "jsonpath={.data['ca\.crt']}")
+TOKEN=$(kubectl get secret ${SECRET_NAME} -n ${NAMESPACE} -o "jsonpath={.data['token']}" | base64 --decode)
+
+
+8. Generate the kubeconfig file
+
+cat <<EOF > ${KUBECFG_FILE}
+apiVersion: v1
+clusters:
+   - cluster:
+       certificate-authority-data: ${CA_DATA}
+       server: ${SERVER}
+     name: ${CLUSTER_NAME}
+contexts:
+   - context:
+       cluster: ${CLUSTER_NAME}
+       user: ${CLUSTER_NAME}
+     name: ${CLUSTER_NAME}
+current-context: ${CLUSTER_NAME}
+kind: Config
+preferences: {}
+users:
+   - name: ${CLUSTER_NAME}
+     user:
+       token: ${TOKEN}
+EOF
+
+
+9. Create a secret in the control cluster with the remote kubeconfig file. You must also label the secret with the value istio/multiCluster=true
+
+kubectx owner
+kubectl create secret generic ${CLUSTER_NAME} --from-file ${KUBECFG_FILE} -n ${NAMESPACE}
+kubectl label secret ${CLUSTER_NAME} istio/multiCluster=true -n ${NAMESPACE}
+
+
+# Deploying the app
+***
+## Building the container image
+***
+1. Clone the source code for the image
+
+git clone https://github.com/loicmiller/secure-workflow
+
+
+2. Build the images
+
+cd $WORKDIR/secure-workflow/movie-workflow/containerized-services/document-base/
+docker build -t gcr.io/${PROJECT_ID}/document-base:v1 .
+
+cd $WORKDIR/secure-workflow/movie-workflow/containerized-services/document-base-owner/
+docker build -t gcr.io/${PROJECT_ID}/document-base-owner:v1 .
+
+cd $WORKDIR/secure-workflow/movie-workflow/containerized-services/document-base-vfx-1/
+docker build -t gcr.io/${PROJECT_ID}/document-base-vfx-1:v1 .
+
+cd $WORKDIR/secure-workflow/movie-workflow/containerized-services/document-base-vfx-2/
+docker build -t gcr.io/${PROJECT_ID}/document-base-vfx-2:v1 .
+
+cd $WORKDIR/secure-workflow/movie-workflow/containerized-services/document-base-vfx-3/
+docker build -t gcr.io/${PROJECT_ID}/document-base-vfx-3:v1 .
+
+cd $WORKDIR/secure-workflow/movie-workflow/containerized-services/document-base-color/
+docker build -t gcr.io/${PROJECT_ID}/document-base-color:v1 .
+
+cd $WORKDIR/secure-workflow/movie-workflow/containerized-services/document-base-sound/
+docker build -t gcr.io/${PROJECT_ID}/document-base-sound:v1 .
+
+cd $WORKDIR/secure-workflow/movie-workflow/containerized-services/document-base-hdr/
+docker build -t gcr.io/${PROJECT_ID}/document-base-hdr:v1 .
+
+
+3. Verify the images have been created
+
+docker images
+
+
+## Upload the container image
+***
+You need to upload the container image to a registry so that GKE can download and run it.
+
+1. Configure the Docker command-line tool to authenticate to Container Registry (you need to run this only once)
+
+gcloud auth configure-docker
+
+
+2. You can now use the Docker command-line tool to upload the image to your Container Registry
+
+docker push gcr.io/${PROJECT_ID}/document-base:v1
+docker push gcr.io/${PROJECT_ID}/document-base-owner:v1
+docker push gcr.io/${PROJECT_ID}/document-base-vfx-1:v1
+docker push gcr.io/${PROJECT_ID}/document-base-vfx-2:v1
+docker push gcr.io/${PROJECT_ID}/document-base-vfx-3:v1
+docker push gcr.io/${PROJECT_ID}/document-base-color:v1
+docker push gcr.io/${PROJECT_ID}/document-base-sound:v1
+docker push gcr.io/${PROJECT_ID}/document-base-hdr:v1
+
+
+## Run container locally (optional)
+***
+1. Test container image by running it locally
+
+docker run --rm -p 5000:5000 gcr.io/${PROJECT_ID}/document-base:v1
+
+
+2. If you're using Cloud Shell, click the Web Preview button and then select the 5000 port number.
+   GKE opens the preview URL on its proxy service in a new browser window.
+
+
+3. Otherwise, open a new terminal window (or a Cloud Shell tab) and run to verify if the container works and responds to requests with "Hello, World!"
+
+curl http://localhost:5000
+
+
+## Installing opa-istio
+***
+1. Install opa-istio in each cluster
+
+cd $WORKDIR
+
+for cluster in $(kubectx);
+do
+    kubectx $cluster;
+    kubectl apply -f $WORKDIR/secure-workflow/movie-workflow/service-mesh/policy.yaml
+done
+
+
+2. Enable automatic injection of the OPA-Istio and proxy sidecar in the namespace where the app will be deployed
+
+for cluster in $(kubectx);
+do
+    kubectx $cluster;
+    kubectl label namespace default opa-istio-injection=enabled;
+    kubectl label namespace default istio-injection=enabled
+done
+
+
+## Deploying the workflow to Kubernetes
+***
+1. Install the apps to their respective clusters
+
+kubectl --context owner -n default apply -f $WORKDIR/secure-workflow/movie-workflow/service-mesh/owner.yaml
+kubectl --context vfx -n default apply -f $WORKDIR/secure-workflow/movie-workflow/service-mesh/vfx.yaml
+kubectl --context color -n default apply -f $WORKDIR/secure-workflow/movie-workflow/service-mesh/color.yaml
+kubectl --context sound -n default apply -f $WORKDIR/secure-workflow/movie-workflow/service-mesh/sound.yaml
+kubectl --context hdr -n default apply -f $WORKDIR/secure-workflow/movie-workflow/service-mesh/hdr.yaml
+
+
+2. Check if the workflow was deployed correctly
+
+for cluster in $(kubectx);
+do
+    kubectl --context $cluster get deployment
+done
+
+for cluster in $(kubectx);
+do
+    kubectl --context $cluster get pods
+done
+

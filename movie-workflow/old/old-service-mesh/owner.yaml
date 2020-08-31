@@ -1,0 +1,54 @@
+##################################################################################################
+# owner service
+##################################################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: owner
+  labels:
+    app: owner
+    service: owner
+spec:
+  ports:
+  - port: 5000
+    name: http
+  selector:
+    app: owner
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: owner
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: owner-v1
+  labels:
+    app: owner
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: owner
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: owner
+        version: v1
+    spec:
+      serviceAccountName: owner
+      containers:
+      - name: owner
+        image: gcr.io/movie-wfs-no-opa/document-base-owner:v1
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5000
+      - name: tcpdump
+        image: corfr/tcpdump
+        command:
+          - /bin/sleep
+          - infinity
+---

@@ -1,0 +1,22 @@
+# curl
+***
+https://stackoverflow.com/questions/18215389/how-do-i-measure-request-and-response-times-at-once-using-curl
+https://blog.josephscott.org/2011/10/14/timing-details-with-curl/
+https://curl.haxx.se/docs/manpage.html
+
+
+
+# Prometheus
+***
+istio_requests_total{source_app="owner"}
+istio_request_duration_seconds_sum{source_app="owner"}
+
+
+curl 'http://10.0.0.61:9090/api/v1/query?query=up&time=2015-07-01T20:10:51.781Z'
+
+
+https://istio.io/latest/docs/ops/configuration/telemetry/monitoring-multicluster-prometheus/
+
+https://medium.com/@ikod/understanding-the-metric-types-of-prometheus-324890c29843
+https://povilasv.me/prometheus-tracking-request-duration/#
+

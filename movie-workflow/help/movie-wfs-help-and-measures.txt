@@ -1,0 +1,55 @@
+# Check node resources
+***
+kubectl --context owner top nodes
+
+
+
+# Delete pods in all contexts
+***
+for cluster in $(kubectx);
+do
+    kubectl --context $cluster delete --all pods -n default
+done
+
+
+
+# Pull latest from repository
+***
+cd secure-workflow/; git pull; cd ..
+
+
+
+# Get path of file
+***
+readlink -f wfs-no-opa-measures.dat
+
+
+
+# Debugging
+***
+## Logs
+***
+kubectl --context color logs color-v1-68cb74d699-nl5b5 -c "opa-istio"
+
+
+
+
+# Measurements
+***
+## Startup time
+***
+until python3 $WORKDIR/secure-workflow/movie-workflow/measurements/gke-measures.py -vv -o wfs-opa-measures.dat;
+do
+    echo "Program crashed with exit code $?.  Respawning..." >&2
+    sleep 30
+done
+
+
+## Request time
+***
+until python3 $WORKDIR/secure-workflow/movie-workflow/measurements/get-request-time.py;
+do
+    echo "Program crashed with exit code $?.  Respawning..." >&2
+    sleep 30
+done
+

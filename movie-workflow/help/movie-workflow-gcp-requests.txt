@@ -1,0 +1,57 @@
+# Movie workflow requests (local app)
+***
+## POST
+***
+
+curl -X POST --header 'Content-Type: application/json' --header 'Accept: text/html' -d '{ \ 
+   "document": "Contents of the document", \ 
+   "document_name": "file_name_to_save" \ 
+ }' 'http://0.0.0.0:5000/api/adder'
+
+
+## GET
+***
+curl -X GET --header 'Accept: application/json' 'http://0.0.0.0:5000/api/adder?document_name=file_name_to_save'
+
+
+
+
+# Movie workflow requests (Kubernetes)
+***
+## Get Pod info
+***
+OWNER_POD_ID="$(kubectl get pods --context owner | grep "owner" | tr -s ' ' | cut -d ' ' -f 1 | awk 'NR>1{print PREV} {PREV=$0} END{printf("%s",$0)}')"
+VFX_1_POD_ID="$(kubectl get pods --context vfx | grep "vfx-1" | tr -s ' ' | cut -d ' ' -f 1 | awk 'NR>1{print PREV} {PREV=$0} END{printf("%s",$0)}')"
+VFX_2_POD_ID="$(kubectl get pods --context vfx | grep "vfx-2" | tr -s ' ' | cut -d ' ' -f 1 | awk 'NR>1{print PREV} {PREV=$0} END{printf("%s",$0)}')"
+VFX_3_POD_ID="$(kubectl get pods --context vfx | grep "vfx-3" | tr -s ' ' | cut -d ' ' -f 1 | awk 'NR>1{print PREV} {PREV=$0} END{printf("%s",$0)}')"
+COLOR_POD_ID="$(kubectl get pods --context color | grep "color" | tr -s ' ' | cut -d ' ' -f 1 | awk 'NR>1{print PREV} {PREV=$0} END{printf("%s",$0)}')"
+SOUND_POD_ID="$(kubectl get pods --context sound | grep "sound" | tr -s ' ' | cut -d ' ' -f 1 | awk 'NR>1{print PREV} {PREV=$0} END{printf("%s",$0)}')"
+HDR_POD_ID="$(kubectl get pods --context hdr | grep "hdr" | tr -s ' ' | cut -d ' ' -f 1 | awk 'NR>1{print PREV} {PREV=$0} END{printf("%s",$0)}')"
+
+VFX_1_SERVICE_IP="$(kubectl get services --context vfx | grep "vfx-1" | tr -s ' ' | cut -d ' ' -f 3 | awk 'NR>1{print PREV} {PREV=$0} END{printf("%s",$0)}')"
+COLOR_SERVICE_IP="$(kubectl get services --context color | grep "color" | tr -s ' ' | cut -d ' ' -f 3 | awk 'NR>1{print PREV} {PREV=$0} END{printf("%s",$0)}')"
+SOUND_SERVICE_IP="$(kubectl get services --context sound | grep "sound" | tr -s ' ' | cut -d ' ' -f 3 | awk 'NR>1{print PREV} {PREV=$0} END{printf("%s",$0)}')"
+HDR_SERVICE_IP="$(kubectl get services --context hdr | grep "hdr" | tr -s ' ' | cut -d ' ' -f 3 | awk 'NR>1{print PREV} {PREV=$0} END{printf("%s",$0)}')"
+
+
+## POST
+***
+kubectl --context owner exec -it $OWNER_POD_ID -c owner -- curl --user owner:password -X POST --header 'Content-Type: application/json' --header 'Accept: text/html' -d '{ "document": "Contents of the document", "document_name": "file_name_to_save" }' http://$VFX_1_SERVICE_IP:5000/api/vfx-1 -v
+
+kubectl --context owner exec -it $OWNER_POD_ID -c owner -- curl --user owner:password -X POST --header 'Content-Type: application/json' --header 'Accept: text/html' -d '{ "document": "Contents of the document", "document_name": "file_name_to_save" }' http://$COLOR_SERVICE_IP:5000/api/color -v
+
+kubectl --context color exec -it $COLOR_POD_ID -c color -- curl --user color:password -X POST --header 'Content-Type: application/json' --header 'Accept: text/html' -d '{ "document": "Contents of the document", "document_name": "file_name_to_save" }' http://$HDR_SERVICE_IP:5000/api/hdr -v
+
+kubectl --context vfx exec -it $VFX_3_POD_ID -c vfx-3 -- curl --user vfx-3:password -X POST --header 'Content-Type: application/json' --header 'Accept: text/html' -d '{ "document": "Contents of the document", "document_name": "file_name_to_save" }' http://$SOUND_SERVICE_IP:5000/api/sound -v
+
+
+### curl write-out format
+
+kubectl --context owner exec -it $OWNER_POD_ID -c owner -- curl --user owner:password -X POST --header 'Content-Type: application/json' --header 'Accept: text/html' -d '{ "document": "Contents of the document", "document_name": "file_name_to_save" }' -w "{"contentType":"%{content_type}","filenameEffective":"%{filename_effective}","ftpEntryPath":"%{ftp_entry_path}","httpCode":"%{http_code}","httpConnect":"%{http_connect}","httpVersion":"%{http_version}","localIp":"%{local_ip}","localPort":"%{local_port}","numConnects":"%{num_connects}","numRedirects":"%{num_redirects}","proxySslVerifyResult":"%{proxy_ssl_verify_result}","redirectUrl":"%{redirect_url}","remoteIp":"%{remote_ip}","remotePort":"%{remote_port}","scheme":"%{scheme}","size":{"download":"%{size_download}","header":"%{size_header}","request":"%{size_request}","upload":"%{size_upload}"},"speed":{"download":"%{speed_download}","upload":"%{speed_upload}"},"sslVerifyResult":"%{ssl_verify_result}","time":{"appconnect":"%{time_appconnect}","connect":"%{time_connect}","namelookup":"%{time_namelookup}","pretransfer":"%{time_pretransfer}","redirect":"%{time_redirect}","starttransfer":"%{time_starttransfer}","total":"%{time_total}"},"urlEffective":"%{url_effective}"}" http://$VFX_1_SERVICE_IP:5000/api/vfx-1
+
+
+## GET
+***
+
+kubectl exec -it $SRC_POD_ID -c $CONTAINER_NAME -- curl --user $SRC_POD_NAME:password -X GET --header 'Accept: application/json' 'http://$DST_POD_SVC_IP:DST_POD_SVC_POD/api/adder?document_name=file_name_to_save' -v
+

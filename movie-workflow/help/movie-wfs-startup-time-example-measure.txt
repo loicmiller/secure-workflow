@@ -1,0 +1,69 @@
+# Measurements
+***
+Output of "kubectl --context owner get pod -o json POD_ID":
+
+"status": {
+        "conditions": [
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2020-06-04T12:00:48Z",
+                "status": "True",
+                "type": "Initialized"
+            },
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2020-06-04T12:01:22Z",
+                "status": "True",
+                "type": "Ready"
+            },
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2020-06-04T12:01:22Z",
+                "status": "True",
+                "type": "ContainersReady"
+            },
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2020-06-04T12:00:46Z",
+                "status": "True",
+                "type": "PodScheduled"
+            }
+        ]
+}
+
+States: PodScheduled -> Initialized -> ContainersReady -> Ready
+Startup time: Ready.time - PodScheduled.time = 2020-06-04T12:01:22Z - 2020-06-04T12:00:46Z = 36 seconds
+
+
+
+After deleting pod: "kubectl --context owner delete pod POD_ID"
+
+"status": {
+        "conditions": [
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2020-06-04T12:17:13Z",
+                "status": "True",
+                "type": "Initialized"
+            },
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2020-06-04T12:17:45Z",
+                "status": "True",
+                "type": "Ready"
+            },
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2020-06-04T12:17:45Z",
+                "status": "True",
+                "type": "ContainersReady"
+            },
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2020-06-04T12:17:10Z",
+                "status": "True",
+                "type": "PodScheduled"
+            }
+        ]
+
+Startup time: Ready.time - PodScheduled.time = 2020-06-04T12:17:45Z - 2020-06-04T12:17:10Z = 35 seconds

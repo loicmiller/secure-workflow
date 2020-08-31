@@ -1,0 +1,423 @@
+cd $HOME
+git clone https://github.com/GoogleCloudPlatform/istio-multicluster-gke.git
+
+cd $HOME/istio-multicluster-gke
+WORKDIR=$(pwd)
+
+git clone https://github.com/ahmetb/kubectx $WORKDIR/kubectx
+export PATH=$PATH:$WORKDIR/kubectx
+
+gcloud container clusters create owner --zone us-central1-f --username "admin" \
+    --machine-type "n1-standard-2" --image-type "COS" --disk-size "100" \
+    --scopes "https://www.googleapis.com/auth/compute","https://www.googleapis.com/auth/devstorage.read_only",\
+https://www.googleapis.com/auth/logging.write,"https://www.googleapis.com/auth/monitoring",\
+https://www.googleapis.com/auth/servicecontrol,"https://www.googleapis.com/auth/service.management.readonly",\
+https://www.googleapis.com/auth/trace.append \
+    --num-nodes "2" --network "default" --enable-stackdriver-kubernetes --enable-ip-alias --async
+
+gcloud container clusters create vfx --zone us-central1-f --username "admin" \
+    --machine-type "n1-standard-2" --image-type "COS" --disk-size "100" \
+    --scopes "https://www.googleapis.com/auth/compute","https://www.googleapis.com/auth/devstorage.read_only",\
+https://www.googleapis.com/auth/logging.write,"https://www.googleapis.com/auth/monitoring",\
+https://www.googleapis.com/auth/servicecontrol,"https://www.googleapis.com/auth/service.management.readonly",\
+https://www.googleapis.com/auth/trace.append \
+    --num-nodes "1" --network "default" --enable-stackdriver-kubernetes --enable-ip-alias
+
+gcloud container clusters create color --zone us-central1-f --username "admin" \
+    --machine-type "n1-standard-2" --image-type "COS" --disk-size "100" \
+    --scopes "https://www.googleapis.com/auth/compute","https://www.googleapis.com/auth/devstorage.read_only",\
+https://www.googleapis.com/auth/logging.write,"https://www.googleapis.com/auth/monitoring",\
+https://www.googleapis.com/auth/servicecontrol,"https://www.googleapis.com/auth/service.management.readonly",\
+https://www.googleapis.com/auth/trace.append \
+    --num-nodes "1" --network "default" --enable-stackdriver-kubernetes --enable-ip-alias
+
+gcloud container clusters create sound --zone us-west2-b --username "admin" \
+    --machine-type "n1-standard-2" --image-type "COS" --disk-size "100" \
+    --scopes "https://www.googleapis.com/auth/compute","https://www.googleapis.com/auth/devstorage.read_only",\
+https://www.googleapis.com/auth/logging.write,"https://www.googleapis.com/auth/monitoring",\
+https://www.googleapis.com/auth/servicecontrol,"https://www.googleapis.com/auth/service.management.readonly",\
+https://www.googleapis.com/auth/trace.append \
+    --num-nodes "1" --network "default" --enable-stackdriver-kubernetes --enable-ip-alias
+
+gcloud container clusters create hdr --zone us-west2-b --username "admin" \
+    --machine-type "n1-standard-2" --image-type "COS" --disk-size "100" \
+    --scopes "https://www.googleapis.com/auth/compute","https://www.googleapis.com/auth/devstorage.read_only",\
+https://www.googleapis.com/auth/logging.write,"https://www.googleapis.com/auth/monitoring",\
+https://www.googleapis.com/auth/servicecontrol,"https://www.googleapis.com/auth/service.management.readonly",\
+https://www.googleapis.com/auth/trace.append \
+    --num-nodes "1" --network "default" --enable-stackdriver-kubernetes --enable-ip-alias
+
+
+gcloud container clusters list
+
+
+
+
+###############################################################################
+
+
+
+
+touch istiokubecfg
+export KUBECONFIG=istiokubecfg
+
+export PROJECT_ID=$(gcloud info --format='value(config.project)')
+gcloud container clusters get-credentials owner --zone us-central1-f --project ${PROJECT_ID}
+gcloud container clusters get-credentials vfx --zone us-central1-f --project ${PROJECT_ID}
+gcloud container clusters get-credentials color --zone us-central1-f --project ${PROJECT_ID}
+gcloud container clusters get-credentials sound --zone us-west2-b --project ${PROJECT_ID}
+gcloud container clusters get-credentials hdr --zone us-west2-b --project ${PROJECT_ID}
+
+kubectx owner=gke_${PROJECT_ID}_us-central1-f_owner
+kubectx vfx=gke_${PROJECT_ID}_us-central1-f_vfx
+kubectx color=gke_${PROJECT_ID}_us-central1-f_color
+kubectx sound=gke_${PROJECT_ID}_us-west2-b_sound
+kubectx hdr=gke_${PROJECT_ID}_us-west2-b_hdr
+
+kubectl create clusterrolebinding user-admin-binding \
+    --clusterrole=cluster-admin --user=$(gcloud config get-value account) \
+    --context owner
+kubectl create clusterrolebinding user-admin-binding \
+    --clusterrole=cluster-admin --user=$(gcloud config get-value account) \
+    --context vfx
+kubectl create clusterrolebinding user-admin-binding \
+    --clusterrole=cluster-admin --user=$(gcloud config get-value account) \
+    --context color
+kubectl create clusterrolebinding user-admin-binding \
+    --clusterrole=cluster-admin --user=$(gcloud config get-value account) \
+    --context sound
+kubectl create clusterrolebinding user-admin-binding \
+    --clusterrole=cluster-admin --user=$(gcloud config get-value account) \
+    --context hdr
+
+
+gcloud compute networks subnets describe default --region=us-central1 --format=json | jq '.secondaryIpRanges[]'
+gcloud compute networks subnets describe default --region=us-west2 --format=json | jq '.secondaryIpRanges[]'
+
+OWNER_POD_CIDR=$(gcloud container clusters describe owner --zone us-central1-f --format=json | jq -r '.clusterIpv4Cidr')
+VFX_POD_CIDR=$(gcloud container clusters describe vfx --zone us-central1-f --format=json | jq -r '.clusterIpv4Cidr')
+COLOR_POD_CIDR=$(gcloud container clusters describe color --zone us-central1-f --format=json | jq -r '.clusterIpv4Cidr')
+SOUND_POD_CIDR=$(gcloud container clusters describe sound --zone us-west2-b --format=json | jq -r '.clusterIpv4Cidr')
+HDR_POD_CIDR=$(gcloud container clusters describe hdr --zone us-west2-b --format=json | jq -r '.clusterIpv4Cidr')
+
+ALL_CLUSTER_CIDRS=$OWNER_POD_CIDR,$VFX_POD_CIDR,$COLOR_POD_CIDR,$SOUND_POD_CIDR,$HDR_POD_CIDR
+
+ALL_CLUSTER_NETTAGS=$(gcloud compute instances list --format=json | jq -r '.[].tags.items[0]' | uniq | awk -vORS=, '{ print $1 }' | sed 's/,$/\n/')
+
+gcloud compute firewall-rules create istio-multicluster-pods \
+    --allow=tcp,udp,icmp,esp,ah,sctp \
+    --direction=INGRESS \
+    --priority=900 \
+    --source-ranges="${ALL_CLUSTER_CIDRS}" \
+    --target-tags="${ALL_CLUSTER_NETTAGS}" --quiet
+
+export ISTIO_VERSION=1.4.1
+wget https://github.com/istio/istio/releases/download/${ISTIO_VERSION}/istio-${ISTIO_VERSION}-linux.tar.gz
+tar -xzf istio-${ISTIO_VERSION}-linux.tar.gz
+rm -r istio-${ISTIO_VERSION}-linux.tar.gz
+
+./istio-${ISTIO_VERSION}/bin/istioctl --context owner manifest apply \
+    --set values.prometheus.enabled=true \
+    --set values.grafana.enabled=true \
+    --set values.kiali.enabled=true \
+    --set values.kiali.createDemoSecret=true
+
+kubectl --context owner get pods -n istio-system
+
+
+
+
+###############################################################################
+
+
+
+
+export PILOT_POD_IP=$(kubectl --context owner -n istio-system get pod -l istio=pilot -o jsonpath='{.items[0].status.podIP}')
+export POLICY_POD_IP=$(kubectl --context owner -n istio-system get pod -l istio=mixer -o jsonpath='{.items[0].status.podIP}')
+export TELEMETRY_POD_IP=$(kubectl --context owner -n istio-system get pod -l istio-mixer-type=telemetry -o jsonpath='{.items[0].status.podIP}')
+
+./istio-${ISTIO_VERSION}/bin/istioctl --context vfx manifest apply \
+    --set profile=remote \
+    --set values.global.controlPlaneSecurityEnabled=false \
+    --set values.global.remotePilotCreateSvcEndpoint=true \
+    --set values.global.remotePilotAddress=${PILOT_POD_IP} \
+    --set values.global.remotePolicyAddress=${POLICY_POD_IP} \
+    --set values.global.remoteTelemetryAddress=${TELEMETRY_POD_IP} \
+    --set gateways.enabled=false \
+    --set autoInjection.enabled=true
+
+./istio-${ISTIO_VERSION}/bin/istioctl --context color manifest apply \
+    --set profile=remote \
+    --set values.global.controlPlaneSecurityEnabled=false \
+    --set values.global.remotePilotCreateSvcEndpoint=true \
+    --set values.global.remotePilotAddress=${PILOT_POD_IP} \
+    --set values.global.remotePolicyAddress=${POLICY_POD_IP} \
+    --set values.global.remoteTelemetryAddress=${TELEMETRY_POD_IP} \
+    --set gateways.enabled=false \
+    --set autoInjection.enabled=true
+
+./istio-${ISTIO_VERSION}/bin/istioctl --context sound manifest apply \
+    --set profile=remote \
+    --set values.global.controlPlaneSecurityEnabled=false \
+    --set values.global.remotePilotCreateSvcEndpoint=true \
+    --set values.global.remotePilotAddress=${PILOT_POD_IP} \
+    --set values.global.remotePolicyAddress=${POLICY_POD_IP} \
+    --set values.global.remoteTelemetryAddress=${TELEMETRY_POD_IP} \
+    --set gateways.enabled=false \
+    --set autoInjection.enabled=true
+
+./istio-${ISTIO_VERSION}/bin/istioctl --context hdr manifest apply \
+    --set profile=remote \
+    --set values.global.controlPlaneSecurityEnabled=false \
+    --set values.global.remotePilotCreateSvcEndpoint=true \
+    --set values.global.remotePilotAddress=${PILOT_POD_IP} \
+    --set values.global.remotePolicyAddress=${POLICY_POD_IP} \
+    --set values.global.remoteTelemetryAddress=${TELEMETRY_POD_IP} \
+    --set gateways.enabled=false \
+    --set autoInjection.enabled=true
+
+
+kubectl --context vfx -n istio-system get pods
+kubectl --context color -n istio-system get pods
+kubectl --context sound -n istio-system get pods
+kubectl --context hdr -n istio-system get pods
+
+
+
+
+###############################################################################
+
+
+
+
+kubectx vfx
+CLUSTER_NAME=$(kubectl config view --minify=true -o "jsonpath={.clusters[].name}")
+CLUSTER_NAME="${CLUSTER_NAME##*_}"
+export KUBECFG_FILE=${WORKDIR}/${CLUSTER_NAME}
+SERVER=$(kubectl config view --minify=true -o "jsonpath={.clusters[].cluster.server}")
+NAMESPACE=istio-system
+SERVICE_ACCOUNT=istio-reader-service-account
+SECRET_NAME=$(kubectl get sa ${SERVICE_ACCOUNT} -n ${NAMESPACE} -o jsonpath='{.secrets[].name}')
+CA_DATA=$(kubectl get secret ${SECRET_NAME} -n ${NAMESPACE} -o "jsonpath={.data['ca\.crt']}")
+TOKEN=$(kubectl get secret ${SECRET_NAME} -n ${NAMESPACE} -o "jsonpath={.data['token']}" | base64 --decode)
+
+
+cat <<EOF > ${KUBECFG_FILE}
+apiVersion: v1
+clusters:
+   - cluster:
+       certificate-authority-data: ${CA_DATA}
+       server: ${SERVER}
+     name: ${CLUSTER_NAME}
+contexts:
+   - context:
+       cluster: ${CLUSTER_NAME}
+       user: ${CLUSTER_NAME}
+     name: ${CLUSTER_NAME}
+current-context: ${CLUSTER_NAME}
+kind: Config
+preferences: {}
+users:
+   - name: ${CLUSTER_NAME}
+     user:
+       token: ${TOKEN}
+EOF
+
+
+kubectx owner
+kubectl create secret generic ${CLUSTER_NAME} --from-file ${KUBECFG_FILE} -n ${NAMESPACE}
+kubectl label secret ${CLUSTER_NAME} istio/multiCluster=true -n ${NAMESPACE}
+
+
+
+
+kubectx color
+CLUSTER_NAME=$(kubectl config view --minify=true -o "jsonpath={.clusters[].name}")
+CLUSTER_NAME="${CLUSTER_NAME##*_}"
+export KUBECFG_FILE=${WORKDIR}/${CLUSTER_NAME}
+SERVER=$(kubectl config view --minify=true -o "jsonpath={.clusters[].cluster.server}")
+NAMESPACE=istio-system
+SERVICE_ACCOUNT=istio-reader-service-account
+SECRET_NAME=$(kubectl get sa ${SERVICE_ACCOUNT} -n ${NAMESPACE} -o jsonpath='{.secrets[].name}')
+CA_DATA=$(kubectl get secret ${SECRET_NAME} -n ${NAMESPACE} -o "jsonpath={.data['ca\.crt']}")
+TOKEN=$(kubectl get secret ${SECRET_NAME} -n ${NAMESPACE} -o "jsonpath={.data['token']}" | base64 --decode)
+
+
+cat <<EOF > ${KUBECFG_FILE}
+apiVersion: v1
+clusters:
+   - cluster:
+       certificate-authority-data: ${CA_DATA}
+       server: ${SERVER}
+     name: ${CLUSTER_NAME}
+contexts:
+   - context:
+       cluster: ${CLUSTER_NAME}
+       user: ${CLUSTER_NAME}
+     name: ${CLUSTER_NAME}
+current-context: ${CLUSTER_NAME}
+kind: Config
+preferences: {}
+users:
+   - name: ${CLUSTER_NAME}
+     user:
+       token: ${TOKEN}
+EOF
+
+
+kubectx owner
+kubectl create secret generic ${CLUSTER_NAME} --from-file ${KUBECFG_FILE} -n ${NAMESPACE}
+kubectl label secret ${CLUSTER_NAME} istio/multiCluster=true -n ${NAMESPACE}
+
+
+
+
+kubectx sound
+CLUSTER_NAME=$(kubectl config view --minify=true -o "jsonpath={.clusters[].name}")
+CLUSTER_NAME="${CLUSTER_NAME##*_}"
+export KUBECFG_FILE=${WORKDIR}/${CLUSTER_NAME}
+SERVER=$(kubectl config view --minify=true -o "jsonpath={.clusters[].cluster.server}")
+NAMESPACE=istio-system
+SERVICE_ACCOUNT=istio-reader-service-account
+SECRET_NAME=$(kubectl get sa ${SERVICE_ACCOUNT} -n ${NAMESPACE} -o jsonpath='{.secrets[].name}')
+CA_DATA=$(kubectl get secret ${SECRET_NAME} -n ${NAMESPACE} -o "jsonpath={.data['ca\.crt']}")
+TOKEN=$(kubectl get secret ${SECRET_NAME} -n ${NAMESPACE} -o "jsonpath={.data['token']}" | base64 --decode)
+
+
+cat <<EOF > ${KUBECFG_FILE}
+apiVersion: v1
+clusters:
+   - cluster:
+       certificate-authority-data: ${CA_DATA}
+       server: ${SERVER}
+     name: ${CLUSTER_NAME}
+contexts:
+   - context:
+       cluster: ${CLUSTER_NAME}
+       user: ${CLUSTER_NAME}
+     name: ${CLUSTER_NAME}
+current-context: ${CLUSTER_NAME}
+kind: Config
+preferences: {}
+users:
+   - name: ${CLUSTER_NAME}
+     user:
+       token: ${TOKEN}
+EOF
+
+
+kubectx owner
+kubectl create secret generic ${CLUSTER_NAME} --from-file ${KUBECFG_FILE} -n ${NAMESPACE}
+kubectl label secret ${CLUSTER_NAME} istio/multiCluster=true -n ${NAMESPACE}
+
+
+
+
+kubectx hdr
+CLUSTER_NAME=$(kubectl config view --minify=true -o "jsonpath={.clusters[].name}")
+CLUSTER_NAME="${CLUSTER_NAME##*_}"
+export KUBECFG_FILE=${WORKDIR}/${CLUSTER_NAME}
+SERVER=$(kubectl config view --minify=true -o "jsonpath={.clusters[].cluster.server}")
+NAMESPACE=istio-system
+SERVICE_ACCOUNT=istio-reader-service-account
+SECRET_NAME=$(kubectl get sa ${SERVICE_ACCOUNT} -n ${NAMESPACE} -o jsonpath='{.secrets[].name}')
+CA_DATA=$(kubectl get secret ${SECRET_NAME} -n ${NAMESPACE} -o "jsonpath={.data['ca\.crt']}")
+TOKEN=$(kubectl get secret ${SECRET_NAME} -n ${NAMESPACE} -o "jsonpath={.data['token']}" | base64 --decode)
+
+
+cat <<EOF > ${KUBECFG_FILE}
+apiVersion: v1
+clusters:
+   - cluster:
+       certificate-authority-data: ${CA_DATA}
+       server: ${SERVER}
+     name: ${CLUSTER_NAME}
+contexts:
+   - context:
+       cluster: ${CLUSTER_NAME}
+       user: ${CLUSTER_NAME}
+     name: ${CLUSTER_NAME}
+current-context: ${CLUSTER_NAME}
+kind: Config
+preferences: {}
+users:
+   - name: ${CLUSTER_NAME}
+     user:
+       token: ${TOKEN}
+EOF
+
+
+kubectx owner
+kubectl create secret generic ${CLUSTER_NAME} --from-file ${KUBECFG_FILE} -n ${NAMESPACE}
+kubectl label secret ${CLUSTER_NAME} istio/multiCluster=true -n ${NAMESPACE}
+
+
+
+
+###############################################################################
+
+
+
+
+git clone https://github.com/loicmiller/secure-workflow
+
+
+cd $WORKDIR/secure-workflow/movie-workflow/containerized-services/document-base/
+docker build -t gcr.io/${PROJECT_ID}/document-base:v1 .
+
+cd $WORKDIR/secure-workflow/movie-workflow/containerized-services/document-base-owner/
+docker build -t gcr.io/${PROJECT_ID}/document-base-owner:v1 .
+
+cd $WORKDIR/secure-workflow/movie-workflow/containerized-services/document-base-vfx-1/
+docker build -t gcr.io/${PROJECT_ID}/document-base-vfx-1:v1 .
+
+cd $WORKDIR/secure-workflow/movie-workflow/containerized-services/document-base-vfx-2/
+docker build -t gcr.io/${PROJECT_ID}/document-base-vfx-2:v1 .
+
+cd $WORKDIR/secure-workflow/movie-workflow/containerized-services/document-base-vfx-3/
+docker build -t gcr.io/${PROJECT_ID}/document-base-vfx-3:v1 .
+
+cd $WORKDIR/secure-workflow/movie-workflow/containerized-services/document-base-color/
+docker build -t gcr.io/${PROJECT_ID}/document-base-color:v1 .
+
+cd $WORKDIR/secure-workflow/movie-workflow/containerized-services/document-base-sound/
+docker build -t gcr.io/${PROJECT_ID}/document-base-sound:v1 .
+
+cd $WORKDIR/secure-workflow/movie-workflow/containerized-services/document-base-hdr/
+docker build -t gcr.io/${PROJECT_ID}/document-base-hdr:v1 .
+
+docker images
+
+
+gcloud auth configure-docker
+
+docker push gcr.io/${PROJECT_ID}/document-base:v1
+docker push gcr.io/${PROJECT_ID}/document-base-owner:v1
+docker push gcr.io/${PROJECT_ID}/document-base-vfx-1:v1
+docker push gcr.io/${PROJECT_ID}/document-base-vfx-2:v1
+docker push gcr.io/${PROJECT_ID}/document-base-vfx-3:v1
+docker push gcr.io/${PROJECT_ID}/document-base-color:v1
+docker push gcr.io/${PROJECT_ID}/document-base-sound:v1
+docker push gcr.io/${PROJECT_ID}/document-base-hdr:v1
+
+
+cd $WORKDIR
+
+
+for cluster in $(kubectx);
+do
+    kubectx $cluster;
+    kubectl label namespace default istio-injection=enabled
+done
+
+kubectl --context owner -n default apply -f $WORKDIR/secure-workflow/movie-workflow/service-mesh/owner.yaml
+kubectl --context vfx -n default apply -f $WORKDIR/secure-workflow/movie-workflow/service-mesh/vfx.yaml
+kubectl --context color -n default apply -f $WORKDIR/secure-workflow/movie-workflow/service-mesh/color.yaml
+kubectl --context sound -n default apply -f $WORKDIR/secure-workflow/movie-workflow/service-mesh/sound.yaml
+kubectl --context hdr -n default apply -f $WORKDIR/secure-workflow/movie-workflow/service-mesh/hdr.yaml
+
+for cluster in $(kubectx);
+do
+    kubectl --context $cluster get pods
+done
+

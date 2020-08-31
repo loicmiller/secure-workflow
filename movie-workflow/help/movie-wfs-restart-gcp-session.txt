@@ -1,0 +1,44 @@
+cd $HOME/istio-multicluster-gke
+WORKDIR=$(pwd)
+
+export PATH=$PATH:$WORKDIR/kubectx
+
+rm istiokubecfg
+touch istiokubecfg
+export KUBECONFIG=istiokubecfg
+
+export PROJECT_ID=$(gcloud info --format='value(config.project)')
+gcloud container clusters get-credentials owner --zone us-central1-f --project ${PROJECT_ID}
+gcloud container clusters get-credentials vfx --zone us-central1-f --project ${PROJECT_ID}
+gcloud container clusters get-credentials color --zone us-central1-f --project ${PROJECT_ID}
+gcloud container clusters get-credentials sound --zone us-west2-b --project ${PROJECT_ID}
+gcloud container clusters get-credentials hdr --zone us-west2-b --project ${PROJECT_ID}
+
+kubectx owner=gke_${PROJECT_ID}_us-central1-f_owner
+kubectx vfx=gke_${PROJECT_ID}_us-central1-f_vfx
+kubectx color=gke_${PROJECT_ID}_us-central1-f_color
+kubectx sound=gke_${PROJECT_ID}_us-west2-b_sound
+kubectx hdr=gke_${PROJECT_ID}_us-west2-b_hdr
+
+OWNER_POD_CIDR=$(gcloud container clusters describe owner --zone us-central1-f --format=json | jq -r '.clusterIpv4Cidr')
+VFX_POD_CIDR=$(gcloud container clusters describe vfx --zone us-central1-f --format=json | jq -r '.clusterIpv4Cidr')
+COLOR_POD_CIDR=$(gcloud container clusters describe color --zone us-central1-f --format=json | jq -r '.clusterIpv4Cidr')
+SOUND_POD_CIDR=$(gcloud container clusters describe sound --zone us-west2-b --format=json | jq -r '.clusterIpv4Cidr')
+HDR_POD_CIDR=$(gcloud container clusters describe hdr --zone us-west2-b --format=json | jq -r '.clusterIpv4Cidr')
+
+ALL_CLUSTER_CIDRS=$OWNER_POD_CIDR,$VFX_POD_CIDR,$COLOR_POD_CIDR,$SOUND_POD_CIDR,$HDR_POD_CIDR
+
+ALL_CLUSTER_NETTAGS=$(gcloud compute instances list --format=json | jq -r '.[].tags.items[0]' | uniq | awk -vORS=, '{ print $1 }' | sed 's/,$/\n/')
+
+export ISTIO_VERSION=1.4.1
+
+export PILOT_POD_IP=$(kubectl --context owner -n istio-system get pod -l istio=pilot -o jsonpath='{.items[0].status.podIP}')
+export POLICY_POD_IP=$(kubectl --context owner -n istio-system get pod -l istio=mixer -o jsonpath='{.items[0].status.podIP}')
+export TELEMETRY_POD_IP=$(kubectl --context owner -n istio-system get pod -l istio-mixer-type=telemetry -o jsonpath='{.items[0].status.podIP}')
+
+
+for cluster in $(kubectx);
+do
+    kubectl --context $cluster get pods
+done
+
