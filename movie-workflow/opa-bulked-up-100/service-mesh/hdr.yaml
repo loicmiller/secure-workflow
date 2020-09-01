@@ -42,7 +42,7 @@ spec:
       serviceAccountName: hdr
       containers:
       - name: hdr
-        image: gcr.io/movie-wfs/document-base-hdr:v1
+        image: gcr.io/movie-wfs-opa-bulked-up-100/document-base-hdr:v1
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 5000

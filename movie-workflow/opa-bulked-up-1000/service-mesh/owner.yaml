@@ -42,7 +42,7 @@ spec:
       serviceAccountName: owner
       containers:
       - name: owner
-        image: gcr.io/movie-wfs/document-base-owner:v1
+        image: gcr.io/movie-wfs-opa-bulked-up-1000/document-base-owner:v1
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 5000
