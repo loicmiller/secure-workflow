@@ -16,6 +16,9 @@ spec:
     filterType: HTTP
     filterName: "envoy.ext_authz"
     filterConfig:
+      with_request_body:
+        max_request_bytes: 8192
+        allow_partial_message: true
       grpc_service:
         # NOTE(tsandall): when this was tested with the envoy_grpc client the gRPC
         # server was receiving check requests over HTTP 1.1. The gRPC server in
@@ -33,6 +36,7 @@ spec:
     filterType: NETWORK
     filterName: "envoy.ext_authz"
     filterConfig:
+      stat_prefix: "ext_authz"
       grpc_service:
         google_grpc:
           target_uri: 127.0.0.1:9191
@@ -76,7 +80,7 @@ data:
       "response": {
         "allowed": true,
         "patchType": "JSONPatch",
-        "patch": base64url.encode(json.marshal(patch)),
+        "patch": base64.encode(json.marshal(patch)),
       },
     }
 
@@ -98,10 +102,11 @@ data:
       "image": "openpolicyagent/opa:0.21.0-istio",
       "name": "opa-istio",
       "args": [
-        "--plugin-dir=.",
         "run",
         "--server",
         "--config-file=/config/config.yaml",
+        "--addr=localhost:8181",
+        "--diagnostic-addr=0.0.0.0:8282",
         "/policy/policy.rego",
       ],
       "volumeMounts": [{
@@ -111,6 +116,18 @@ data:
         "mountPath": "/policy",
         "name": "opa-policy",
       }],
+      "readinessProbe": {
+        "httpGet": {
+          "path": "/health?plugins",
+          "port": 8282,
+        },
+      },
+      "livenessProbe": {
+        "httpGet": {
+          "path": "/health?plugins",
+          "port": 8282,
+        },
+      }
     }
 
     opa_config_volume = {
@@ -151,10 +168,10 @@ metadata:
   namespace: opa-istio
   name: admission-controller
 spec:
+  replicas: 1
   selector:
     matchLabels:
       app: admission-controller
-  replicas: 1
   template:
     metadata:
       labels:
@@ -173,6 +190,20 @@ spec:
           - "--tls-private-key-file=/certs/tls.key"
           - "--addr=0.0.0.0:443"
           - "/policies/inject.rego"
+          livenessProbe:
+            httpGet:
+              path: /health?plugins
+              scheme: HTTPS
+              port: 443
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /health?plugins
+              scheme: HTTPS
+              port: 443
+            initialDelaySeconds: 5
+            periodSeconds: 5
           volumeMounts:
             - readOnly: true
               mountPath: /certs
@@ -223,9 +254,11 @@ metadata:
 data:
   config.yaml: |
     plugins:
-      envoy.ext_authz.grpc:
+      envoy_ext_authz_grpc:
         addr: :9191
-        query: data.istio.authz.allow
+        path: istio/authz/allow
+    decision_logs:
+      console: true
 ---
 ############################################################
 # Example policy to enforce into OPA-Istio sidecars.
