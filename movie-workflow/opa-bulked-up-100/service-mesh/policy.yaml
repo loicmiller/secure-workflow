@@ -402,6 +402,7 @@ data:
       to_number(current_time[0]) >= 8
       to_number(current_time[0]) <= 17
     }
+
     performance_hit {
       1 < 2
       3 < 4
