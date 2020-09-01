@@ -2,7 +2,6 @@
 ***
 ## POST
 ***
-
 curl -X POST --header 'Content-Type: application/json' --header 'Accept: text/html' -d '{ \ 
    "document": "Contents of the document", \ 
    "document_name": "file_name_to_save" \ 
@@ -47,11 +46,13 @@ kubectl --context vfx exec -it $VFX_3_POD_ID -c vfx-3 -- curl --user vfx-3:passw
 
 ### curl write-out format
 
+kubectl --context owner exec -it $OWNER_POD_ID -c owner -- curl -w "time_total: %{time_total}\n" --user owner:password -X POST --header 'Content-Type: application/json' --header 'Accept: text/html' -d '{ "document": "Contents of the document", "document_name": "file_name_to_save" }' http://$VFX_1_SERVICE_IP:5000/api/vfx-1
+
+
 kubectl --context owner exec -it $OWNER_POD_ID -c owner -- curl --user owner:password -X POST --header 'Content-Type: application/json' --header 'Accept: text/html' -d '{ "document": "Contents of the document", "document_name": "file_name_to_save" }' -w "{"contentType":"%{content_type}","filenameEffective":"%{filename_effective}","ftpEntryPath":"%{ftp_entry_path}","httpCode":"%{http_code}","httpConnect":"%{http_connect}","httpVersion":"%{http_version}","localIp":"%{local_ip}","localPort":"%{local_port}","numConnects":"%{num_connects}","numRedirects":"%{num_redirects}","proxySslVerifyResult":"%{proxy_ssl_verify_result}","redirectUrl":"%{redirect_url}","remoteIp":"%{remote_ip}","remotePort":"%{remote_port}","scheme":"%{scheme}","size":{"download":"%{size_download}","header":"%{size_header}","request":"%{size_request}","upload":"%{size_upload}"},"speed":{"download":"%{speed_download}","upload":"%{speed_upload}"},"sslVerifyResult":"%{ssl_verify_result}","time":{"appconnect":"%{time_appconnect}","connect":"%{time_connect}","namelookup":"%{time_namelookup}","pretransfer":"%{time_pretransfer}","redirect":"%{time_redirect}","starttransfer":"%{time_starttransfer}","total":"%{time_total}"},"urlEffective":"%{url_effective}"}" http://$VFX_1_SERVICE_IP:5000/api/vfx-1
 
 
 ## GET
 ***
-
 kubectl exec -it $SRC_POD_ID -c $CONTAINER_NAME -- curl --user $SRC_POD_NAME:password -X GET --header 'Accept: application/json' 'http://$DST_POD_SVC_IP:DST_POD_SVC_POD/api/adder?document_name=file_name_to_save' -v
 
