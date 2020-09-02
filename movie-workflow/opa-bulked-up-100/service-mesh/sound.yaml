@@ -43,7 +43,7 @@ spec:
       volumes:
       containers:
       - name: sound
-        image: gcr.io/movie-wfs-opa-bulked-up-100/document-base-sound:v1
+        image: gcr.io/movie-wfs-opa-minimal/document-base-sound:v1
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 5000
