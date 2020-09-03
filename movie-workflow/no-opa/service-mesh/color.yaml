@@ -42,7 +42,7 @@ spec:
       serviceAccountName: color
       containers:
       - name: color
-        image: gcr.io/movie-wfs-no-opa/document-base-color:v1
+        image: gcr.io/movie-wfs-no-opa-288415/document-base-color:v1
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 5000
