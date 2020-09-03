@@ -38,7 +38,7 @@ kubectl --context color logs color-v1-68cb74d699-nl5b5 -c "opa-istio"
 ***
 ## Startup time
 ***
-until python3 $WORKDIR/secure-workflow/movie-workflow/measurements/startup-time/gke-measures.py -o wfs-opa-measures.dat;
+until python3 $WORKDIR/secure-workflow/movie-workflow/measurements/startup-time/get-startup-time.py;
 do
     echo "Program crashed with exit code $?.  Respawning..." >&2
     sleep 30
