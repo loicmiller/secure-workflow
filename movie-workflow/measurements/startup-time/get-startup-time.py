@@ -169,10 +169,10 @@ def terminate_app(code):
 
 def get_parser():
     # Get parser for command line arguments
-    parser = argparse.ArgumentParser(description="Measures for secure architecture")
+    parser = argparse.ArgumentParser(description="Measures for secure architecture", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("--version", action="version", version='%(prog)s 1.0')
     parser.add_argument("-v", "--verbose", action="count", default=0, help="increase output verbosity")
-    parser.add_argument("-o", "--output-file", type=str, metavar="FILE", default="measurements.dat", help="file to store measurements")
+    parser.add_argument("-o", "--output-file", type=str, metavar="FILE", default="startup-time.dat", help="file to store measurements")
 
     return parser
 
